@@ -1,5 +1,8 @@
-import eslint from './eslint/.eslintrc.cjs'
-import prettier from './prettier/.prettierrc.cjs'
+/* eslint-disable no-undef */
+const eslintrc = require('./eslint/.eslintrc.cjs')
+const prettierconfig = require('./prettier/.prettierrc.cjs')
 
-export const eslint = eslint
-export const prettier = prettier
+module.exports = {
+  eslint: eslintrc,
+  prettier: prettierconfig
+}
