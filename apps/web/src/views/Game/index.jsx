@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { CustomLayout } from '../../components'
-import { displayCanvas } from './func/game'
+import { displayCanvas } from './game'
 
 const Game = () => {
   useEffect(() => {

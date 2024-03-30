@@ -1,36 +1,18 @@
-import { Container, Sprite } from 'pixi.js'
+import { drawShape } from '../func/functions'
 
-export class IBlock {
-  constructor(texture, velocity = { dx: 0, dy: 3 }) {
-    this.shapeMatrix = [[1, 1, 1, 1]]
+export class Block {
+  constructor(velocity = { dx: 0, dy: 3 }, shape) {
+    this.shape = shape
 
     this.position = { x: 0, y: 0 }
-    this.texture = texture
+    this.texture = shape.texture
     this.velocity = velocity
 
     this.container = null
   }
 
   createShape(game) {
-    const sprite = new Sprite(game.textures.red)
-    const container = new Container()
-
-    this.shapeMatrix.forEach((row, y) => {
-      row.forEach((value, x) => {
-        if (value === 1) {
-          const sprite = new Sprite(this.texture)
-          sprite.x = x + 24
-          sprite.y = y
-
-          container.addChild(sprite)
-
-          // context.fillStyle = color
-          // context.fillRect(x + piece.position.x, y + piece.position.y, 1, 1)
-        }
-      })
-    })
-
-    // container.addChild(sprite)
+    const container = drawShape(this.shape.matrix, this.texture)
 
     const { width } = container.getSize()
 
