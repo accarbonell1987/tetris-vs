@@ -1,13 +1,7 @@
-import useDarkMode from 'use-dark-mode'
-
 import style from './container.module.css'
 
-const CustomContainer = ({ children }) => {
-  const darkMode = useDarkMode()
-
-  const containerClassName = `${style.customContainer} ${
-    'theme' + darkMode.value ? 'Dark' : 'Light'
-  }`
+const CustomContainer = ({ children, theme }) => {
+  const containerClassName = `${style.customContainer} ${theme}`
 
   return <div className={containerClassName}>{children}</div>
 }

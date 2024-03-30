@@ -1,16 +1,13 @@
 import React from 'react'
-import { useThemeSwitcher } from '../../hooks'
+import { CustomCard, CustomLayout } from '../../components'
 
 const Login = () => {
-  const { theme, switchTheme } = useThemeSwitcher()
-
   return (
-    <div>
-      <h1>Change Theme</h1>
-      <button type="button" onClick={() => switchTheme()}>
-        Cambiar
-      </button>
-    </div>
+    <CustomLayout>
+      <div style={{ width: '300px', height: '100px' }}>
+        <CustomCard />
+      </div>
+    </CustomLayout>
   )
 }
 
