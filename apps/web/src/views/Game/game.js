@@ -1,95 +1,77 @@
-import { Application, Assets } from 'pixi.js'
-import { Block } from './shapes/hectas'
-import { randomFromArray } from './func/functions'
-import { PIECES, WallShape } from './static/commons'
+import { Application } from 'pixi.js'
+import { loadAllTextures, initBoard, drawBoard } from './func/functions'
 
-const app = new Application()
+import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, BLOCKS } from './static/commons'
 
-const loadAllTextures = async () => {
-  // Cargar todos las texturas y hacer los sprites
-  const blockRedTexture = await Assets.load('../../assets/images/block-red.png')
-  const blockGreenTexture = await Assets.load('../../assets/images/block-green.png')
-  const blockYellowTexture = await Assets.load('../../assets/images/block-yellow.png')
-  const blockPurpleTexture = await Assets.load('../../assets/images/block-purple.png')
-  const blockPinkTexture = await Assets.load('../../assets/images/block-pink.png')
-  const blockOrangeTexture = await Assets.load('../../assets/images/block-orange.png')
-  const blockCyanTexture = await Assets.load('../../assets/images/block-cyan.png')
-  const blockBlueTexture = await Assets.load('../../assets/images/block-blue.png')
-  const blockWallTexture = await Assets.load('../../assets/images/block-wall.png')
-
-  return {
-    red: blockRedTexture,
-    green: blockGreenTexture,
-    yellow: blockYellowTexture,
-    purple: blockPurpleTexture,
-    pink: blockPinkTexture,
-    orange: blockOrangeTexture,
-    cyan: blockCyanTexture,
-    blue: blockBlueTexture,
-    wall: blockWallTexture
-  }
+var game = {
+  app: null,
+  size: { x: 0, y: 0 },
+  textures: null,
+  player1: null,
+  player2: null,
+  figures: [],
+  board: [],
+  walls: []
 }
 
-const init = async () => {
-  await app.init({ width: 284, height: 504 })
-}
+const setup = async (element) => {
+  const app = new Application()
 
-const drawBorders = (game) => {
-  // Cargar el board con 0 para las posiciones abiertas y 1 para los bloques
-  for (let x = 0; x < 12; x++) {
-    const rowToFill = new Array(12).fill(x === 11 ? 1 : 0)
-    game.board[x] = rowToFill
+  const size = { width: BLOCK_SIZE * BOARD_WIDTH, height: BLOCK_SIZE * BOARD_HEIGHT }
+  await app.init({ antialias: true, ...size })
 
-    for (let y = 0; y < 21; y++) {
-      if (y === 0 || y === 20) game.board[x][y] = 1
-    }
-  }
-
-  const wall = new Block({ dx: 0, dy: 0 }, WallShape)
-  wall.createShape(game)
-}
-
-export const displayCanvas = async (element) => {
-  await init()
-
-  element.appendChild(app.canvas)
-
-  // Parametros globales
-  const game = {
+  //Initialize the game sprites, set the game `state` to `play`
+  //and start the 'gameLoop'
+  game = {
+    app: app,
+    block: {
+      size: 24
+    },
     size: { x: app.canvas.width, y: app.canvas.height },
-    active: null,
     textures: null,
-    player1: {},
-    player2: {},
+    player1: null,
+    player2: null,
     figures: [],
     board: []
   }
+
+  element.appendChild(game.app.canvas)
 
   // Cargar texturas
   const textures = await loadAllTextures()
   game.textures = textures
 
-  drawBorders(game)
+  initBoard(game)
+  drawBoard(game)
 
-  // Cargar formas
-  const shape = randomFromArray(PIECES)
-  shape.texture = Object.entries(game.textures).find((p) => p[0] === shape.color)[1]
+  // const player1Shape = getShapeForPlayer(game)
+  // const player2Shape = getShapeForPlayer(game)
 
-  const containerIBlock = new Block({ dx: 0, dy: 3 }, shape)
-  containerIBlock.createShape(game)
+  // game.player1 = new Player({ porcent: 0.297 }, player1Shape, 1)
+  // game.player2 = new Player({ porcent: 0.791 }, player2Shape, 1)
 
-  // Posicionar elementos en la escena
+  // game.player1.addShape(game)
+  // console.log(game.player1)
+  // game.player2.addShape(game)
 
-  // Adicionar elementos
-  app.stage.addChild(containerIBlock.container)
+  // game.walls.objects.map((p) => {
+  //   game.app.stage.addChild(p.container)
+  // })
 
-  game.active = containerIBlock.container
+  gameLoop()
+}
 
+const gameLoop = () => {
   // Bucle de animación
-  app.ticker.add((time) => {
+  game.app.ticker.add((time) => {
+    // game.player1.update(time)
+    // game.player2.update(time)
     // Continuously rotate the container!
     // * use delta to create frame-independent transform *
     // container.rotation -= 0.01 * time.deltaTime
-    game.active.y += 1 * time.deltaTime
   })
+}
+
+export const displayCanvas = async (element) => {
+  await setup(element)
 }
