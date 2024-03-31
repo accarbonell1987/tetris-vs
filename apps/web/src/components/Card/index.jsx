@@ -5,7 +5,7 @@ const CustomCard = () => {
   return (
     <Card>
       <CardBody>
-        <p>Make beautiful websites regardless of your design experience.</p>
+        <p className="bg-red-600">Make beautiful websites regardless of your design experience.</p>
       </CardBody>
     </Card>
   )
