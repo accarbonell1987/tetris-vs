@@ -1,14 +1,20 @@
 import { Application } from 'pixi.js'
-import { loadAllTextures, initBoard, drawBoard } from './func/functions'
+import {
+  loadAllTextures,
+  initBoard,
+  drawBoard,
+  createPlayers,
+  getPieceForPlayer,
+  drawPiece
+} from './func/functions'
 
-import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, BLOCKS } from './static/commons'
+import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH } from './static/commons'
 
 var game = {
   app: null,
   size: { x: 0, y: 0 },
   textures: null,
-  player1: null,
-  player2: null,
+  players: [],
   figures: [],
   board: [],
   walls: []
@@ -29,10 +35,14 @@ const setup = async (element) => {
     },
     size: { x: app.canvas.width, y: app.canvas.height },
     textures: null,
-    player1: null,
-    player2: null,
+    players: [],
     figures: [],
-    board: []
+    board: [],
+    statics: {
+      BLOCK_SIZE,
+      BOARD_HEIGHT,
+      BOARD_WIDTH
+    }
   }
 
   element.appendChild(game.app.canvas)
@@ -42,13 +52,23 @@ const setup = async (element) => {
   game.textures = textures
 
   initBoard(game)
+  createPlayers(game, 2)
+
   drawBoard(game)
+
+  game.players[0].piece = getPieceForPlayer(game, game.players[0])
+  // game.players[1].piece = getPieceForPlayer(game, game.players[1])
+
+  drawPiece(game, game.players[0])
+  // drawPiece(game, game.players[1])
+
+  console.log(game)
 
   // const player1Shape = getShapeForPlayer(game)
   // const player2Shape = getShapeForPlayer(game)
 
-  // game.player1 = new Player({ porcent: 0.297 }, player1Shape, 1)
-  // game.player2 = new Player({ porcent: 0.791 }, player2Shape, 1)
+  // game.player1 = new Player({ percent: 0.297 }, player1Shape, 1)
+  // game.player2 = new Player({ percent: 0.791 }, player2Shape, 1)
 
   // game.player1.addShape(game)
   // console.log(game.player1)
@@ -64,6 +84,10 @@ const setup = async (element) => {
 const gameLoop = () => {
   // Bucle de animación
   game.app.ticker.add((time) => {
+    const delta = time.deltaTiem
+
+    // drawPiece(game, game.players[0].piece)
+
     // game.player1.update(time)
     // game.player2.update(time)
     // Continuously rotate the container!

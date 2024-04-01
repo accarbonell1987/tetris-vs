@@ -25,7 +25,7 @@ export class Player {
     const { app } = game
     const { width } = this.piece.container.getSize()
 
-    this.piece.container.x = game.size.x * this.spawn.porcent - width / 2
+    this.piece.container.x = game.size.x * this.spawn.percent - width / 2
     this.piece.container.y = 5
 
     // Adicionar elementos a la escena

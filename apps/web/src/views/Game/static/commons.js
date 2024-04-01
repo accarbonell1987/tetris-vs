@@ -9,19 +9,17 @@ export const colors = {
   wall: 'wall'
 }
 
-const block = [[1]]
-
 export const WallShape = {
   id: 1,
   color: colors.wall,
-  block,
-  matrix: block
+  block: [[1]],
+  matrix: [[1]]
 }
 
 const O = {
   id: 2,
   color: colors.red,
-  block,
+  block: [[2]],
   matrix: [
     [2, 2],
     [2, 2]
@@ -31,14 +29,14 @@ const O = {
 const I = {
   id: 3,
   color: colors.green,
-  block,
+  block: [[3]],
   matrix: [[3, 3, 3, 3]]
 }
 
 const L = {
   id: 4,
   color: colors.yellow,
-  block,
+  block: [[4]],
   matrix: [
     [4, 0],
     [4, 0],
@@ -49,7 +47,7 @@ const L = {
 const S = {
   id: 5,
   color: colors.purple,
-  block,
+  block: [[5]],
   matrix: [
     [0, 5, 5],
     [5, 5, 0]
@@ -59,7 +57,7 @@ const S = {
 const Li = {
   id: 6,
   color: colors.pink,
-  block,
+  block: [[6]],
   matrix: [
     [0, 6],
     [0, 6],
@@ -70,7 +68,7 @@ const Li = {
 const Si = {
   id: 7,
   color: colors.cyan,
-  block,
+  block: [[7]],
   matrix: [
     [7, 7, 0],
     [0, 7, 7]

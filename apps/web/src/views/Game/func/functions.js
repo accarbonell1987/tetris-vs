@@ -1,6 +1,6 @@
 import { Assets, Container, Sprite } from 'pixi.js'
 import { Block } from '../shapes/classes'
-import { BLOCKS, PIECES, WallShape } from '../static/commons'
+import { BLOCKS, PIECES } from '../static/commons'
 
 export const initBoard = (game) => {
   // Cargar el board con 0 para las posiciones abiertas y 1 para los bloques
@@ -43,60 +43,70 @@ export const drawBoard = (game) => {
   game.board.forEach((row, y) => {
     row.forEach((value, x) => {
       if (value === 1) {
-        const wall = getShapeForBlock(game, value)
-        wall.container.x = x * size + size / 2
-        wall.container.y = y * size + size / 2
-        game.app.stage.addChild(wall.container)
+        const wall = getPieceForBlock(game, value)
+        wall.sprite.x = x * size + size / 2
+        wall.sprite.y = y * size + size / 2
+        game.app.stage.addChild(wall.sprite)
       }
     })
   })
-
-  // const size = 24
-  // for (let y = 0; y < 21; y++) {
-  //   for (let x = 0; x < 12; x++) {
-  //     const position = game.board[y][x]
-
-  //     if (position === 1) {
-  //       const wall = getShapeForWall(game)
-
-  //       // Posicionar
-  //       wall.container.x = x * size + size / 2
-  //       wall.container.y = y * size + size / 2
-
-  //       // Adicionar elementos al arreglo de walls
-  //       game.walls.push(wall)
-  //     }
-  //   }
-  // }
 }
 
-export const drawPiece = (piece, color) => {
-  piece.shape.forEach((row, y) => {
+export const drawPiece = (game, player) => {
+  const size = game.block.size
+  const middle = size / 2
+
+  player.piece.matrix.forEach((row, y) => {
     row.forEach((value, x) => {
-      if (value === 1) {
-        context.fillStyle = color
-        context.fillRect(x + piece.position.x, y + piece.position.y, 1, 1)
+      if (value !== 0) {
+        const piece = getPieceForBlock(game, value)
+        piece.sprite.x = x * size + size + middle
+        piece.sprite.y = y * size + middle
+
+        console.log(`x: ${x}, y: ${y}, pX: ${piece.sprite.x}, pY: ${piece.sprite.y}`)
+
+        game.app.stage.addChild(piece.sprite)
       }
     })
   })
 }
 
-export const getShapeForPlayer = (game) => {
+//! Crear la cantidad de jugadores
+export const createPlayers = (game, numbers) => {
+  const range = game.statics.BOARD_WIDTH / 4
+
+  for (let index = 1; index <= numbers; index++) {
+    const position = index === 1 ? range / 2 : range + range / 2
+
+    game.players.push({
+      speed: 0.5,
+      piece: null,
+      spawn: { position: Math.ceil(position) }
+    })
+  }
+}
+
+export const getPieceForPlayer = (game, player) => {
   // Cargar Shape
   const shape = randomFromArray(PIECES)
   // const shape = PIECES[1]
   shape.texture = Object.entries(game.textures).find((p) => p[0] === shape.color)[1]
+  shape.position = player.spawn.position
 
-  // Crear Shape
-  return new Block(shape)
+  return shape
 }
 
-export const getShapeForBlock = (game, id) => {
+export const getPieceForBlock = (game, id) => {
   const piece = BLOCKS.find((p) => p.id === id)
-  piece.texture = Object.entries(game.textures).find((p) => p[0] === piece.color)[1]
+
+  const texture = Object.entries(game.textures).find((p) => p[0] === piece.color)[1]
+  piece.sprite = new Sprite(texture)
+  piece.sprite.anchor.set(0.5)
+  piece.sprite.width = 24
+  piece.sprite.height = 24
 
   // Crear Shape
-  return new Block(piece)
+  return piece
 }
 
 export const checkCollisions = (game) => {
