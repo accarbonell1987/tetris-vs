@@ -15,9 +15,7 @@ export const drawMatrix = (context, matrix) => {
 
   matrix.forEach((row, y) => {
     row.forEach((value, x) => {
-      if (value === 1) {
-        // context.fillStyle = color
-        // context.fillRect(x, y, 1, 1)
+      if (value !== 0) {
         context.drawImage(image, x, y, 1, 1)
       }
     })

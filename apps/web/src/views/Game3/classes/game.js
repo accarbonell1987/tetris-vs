@@ -1,7 +1,6 @@
 import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, VELOCITY } from '../static/commons'
 import { generateRandomPiece } from '../func/piece'
 import { createBoard } from '../func/board'
-import { checkCollisions } from '../func/collitions'
 
 export class Game {
   constructor() {
@@ -53,7 +52,7 @@ export class Game {
       this.render.dropCounter = 0
     }
 
-    if (checkCollisions(this.piece, this.board)) {
+    if (this.checkCollisions()) {
       this.piece.position.y--
       this.solidifyPiece()
       this.removeRows()
@@ -64,17 +63,17 @@ export class Game {
 
   moveLeft() {
     this.piece.moveLeft()
-    if (checkCollisions(this.piece, this.board)) this.piece.moveRight()
+    if (this.checkCollisions()) this.piece.moveRight()
   }
 
   moveRight() {
     this.piece.moveRight()
-    if (checkCollisions(this.piece, this.board)) this.piece.moveLeft()
+    if (this.checkCollisions()) this.piece.moveLeft()
   }
 
   moveDown() {
     this.piece.moveDown()
-    if (checkCollisions(this.piece, this.board)) {
+    if (this.checkCollisions()) {
       this.piece.moveUp()
       this.solidifyPiece()
       this.removeRows()
@@ -83,7 +82,18 @@ export class Game {
 
   rotate() {
     const rotated = this.piece.rotate()
-    if (!checkCollisions(this.piece, this.board)) this.piece.shape = rotated
+    if (!this.checkCollisions()) this.piece.shape = rotated
+  }
+
+  checkCollisions() {
+    return this.piece.shape.find((row, y) => {
+      return row.find((value, x) => {
+        return (
+          value !== 0 &&
+          this.board.matrix[y + this.piece.position.y]?.[x + this.piece.position.x] !== 0
+        )
+      })
+    })
   }
 
   solidifyPiece() {
@@ -127,7 +137,7 @@ export class Game {
 
   gameOver() {
     //! gameover
-    if (checkCollisions(this.piece, this.board)) {
+    if (this.checkCollisions()) {
       this.board.matrix.forEach((row) => row.fill(0))
     }
   }
