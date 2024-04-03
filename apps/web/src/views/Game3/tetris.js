@@ -224,23 +224,3 @@ document.addEventListener('keydown', (event) => {
       break
   }
 })
-
-// const $section = document.querySelector('section')
-// const $info = document.querySelector('article')
-
-// $info.addEventListener('click', () => {
-//   // audioState ? audio.pause() : audio.play()
-//   // audioState = !audioState
-//   // $info.innerText = `Music: ${audioState ? 'ON' : 'OFF'} | Speed: ${
-//   //   VELOCITY[level - 1].speed
-//   // } | Level: ${level}`
-//   // $info.innerText = `Music: ${audioState ? "ON" : "OFF"}`;
-// })
-
-// $section.addEventListener('click', () => {
-//   update()
-//   // $section.remove()
-
-//   // audio.volume = 0.5
-//   // audio.play()
-// })
