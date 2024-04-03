@@ -60,10 +60,10 @@ export const drawPiece = (game, player) => {
     row.forEach((value, x) => {
       if (value !== 0) {
         const piece = getPieceForBlock(game, value)
-        piece.sprite.x = x * size + size + middle
-        piece.sprite.y = y * size + middle
+        piece.sprite.x = player.piece.position.x + x * size + size + middle
+        piece.sprite.y = player.piece.position.y + y * size + middle
 
-        console.log(`x: ${x}, y: ${y}, pX: ${piece.sprite.x}, pY: ${piece.sprite.y}`)
+        // console.log(`x: ${x}, y: ${y}, pX: ${piece.sprite.x}, pY: ${piece.sprite.y}`)
 
         game.app.stage.addChild(piece.sprite)
       }
@@ -81,7 +81,7 @@ export const createPlayers = (game, numbers) => {
     game.players.push({
       speed: 0.5,
       piece: null,
-      spawn: { position: Math.ceil(position) }
+      spawn: { position: { x: Math.ceil(position), y: 0 } }
     })
   }
 }

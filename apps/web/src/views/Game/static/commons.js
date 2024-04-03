@@ -80,6 +80,49 @@ export const BLOCK_SIZE = 24
 export const BOARD_WIDTH = 12
 export const BOARD_HEIGHT = 21
 
+// Velocidad de caída de las piezas (en milisegundos)
+export const FALL_SPEED = 1000 // 1 segundofall
+
+// Definir los tipos de piezas
+export const PIECE_TYPES = [
+  [[1, 1, 1, 1]], // I
+  [
+    [1, 1, 1],
+    [0, 1, 0]
+  ], // T
+  [
+    [1, 1, 1],
+    [1, 0, 0]
+  ], // L
+  [
+    [1, 1, 1],
+    [0, 0, 1]
+  ], // J
+  [
+    [1, 1],
+    [1, 1]
+  ], // O
+  [
+    [1, 1, 0],
+    [0, 1, 1]
+  ], // S
+  [
+    [0, 1, 1],
+    [1, 1, 0]
+  ] // Z
+]
+
+// Colores correspondientes a los tipos de piezas
+export const PIECE_COLORS = [
+  0xff0000, // Rojo
+  0x00ff00, // Verde
+  0x0000ff, // Azul
+  0xffff00, // Amarillo
+  0xff00ff, // Magenta
+  0x00ffff, // Cyan
+  0xffa500 // Naranja
+]
+
 export const MOVEMENTS = {
   LEFT: 'ArrowLeft',
   RIGHT: 'ArrowRight',

@@ -1,7 +1,7 @@
 import React from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 
-import { Login, Lobby, Game, Errors } from '../views'
+import { Login, Lobby, Game3, Errors } from '../views'
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +14,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '/game',
-    element: <Game />
+    element: <Game3 />
   }
 ])

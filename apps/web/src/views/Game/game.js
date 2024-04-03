@@ -1,101 +1,74 @@
 import { Application } from 'pixi.js'
-import {
-  loadAllTextures,
-  initBoard,
-  drawBoard,
-  createPlayers,
-  getPieceForPlayer,
-  drawPiece
-} from './func/functions'
+import { drawBoard, handlePieceMovement, generateRandomPiece } from './func'
+import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, FALL_SPEED } from './static/commons'
 
-import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH } from './static/commons'
+const app = new Application()
 
-var game = {
-  app: null,
+const game = {
+  app: app,
+  fallTimer: 0,
   size: { x: 0, y: 0 },
   textures: null,
-  players: [],
+  player: {
+    piece: null
+  },
   figures: [],
   board: [],
   walls: []
 }
 
-const setup = async (element) => {
-  const app = new Application()
-
+const init = async (element) => {
   const size = { width: BLOCK_SIZE * BOARD_WIDTH, height: BLOCK_SIZE * BOARD_HEIGHT }
   await app.init({ antialias: true, ...size })
-
-  //Initialize the game sprites, set the game `state` to `play`
-  //and start the 'gameLoop'
-  game = {
-    app: app,
-    block: {
-      size: 24
-    },
-    size: { x: app.canvas.width, y: app.canvas.height },
-    textures: null,
-    players: [],
-    figures: [],
-    board: [],
-    statics: {
-      BLOCK_SIZE,
-      BOARD_HEIGHT,
-      BOARD_WIDTH
-    }
-  }
+  game.size = { x: app.canvas.width, y: app.canvas.height }
 
   element.appendChild(game.app.canvas)
 
-  // Cargar texturas
-  const textures = await loadAllTextures()
-  game.textures = textures
-
-  initBoard(game)
-  createPlayers(game, 2)
-
-  drawBoard(game)
-
-  game.players[0].piece = getPieceForPlayer(game, game.players[0])
-  // game.players[1].piece = getPieceForPlayer(game, game.players[1])
-
-  drawPiece(game, game.players[0])
-  // drawPiece(game, game.players[1])
-
-  console.log(game)
-
-  // const player1Shape = getShapeForPlayer(game)
-  // const player2Shape = getShapeForPlayer(game)
-
-  // game.player1 = new Player({ percent: 0.297 }, player1Shape, 1)
-  // game.player2 = new Player({ percent: 0.791 }, player2Shape, 1)
-
-  // game.player1.addShape(game)
-  // console.log(game.player1)
-  // game.player2.addShape(game)
-
-  // game.walls.objects.map((p) => {
-  //   game.app.stage.addChild(p.container)
-  // })
-
-  gameLoop()
+  await loadResources()
+  startGame()
 }
 
-const gameLoop = () => {
-  // Bucle de animación
-  game.app.ticker.add((time) => {
-    const delta = time.deltaTiem
+const loadResources = async () => {
+  // Aquí deberías cargar todas las texturas necesarias para el juego.
+  // Por ahora, la función loadResources() está vacía.
+  // const textures = await loadAllTextures()
+  // game.textures = textures
+}
 
-    // drawPiece(game, game.players[0].piece)
+const gameLoop = (delta) => {
+  update(delta)
+  render()
+}
 
-    // game.player1.update(time)
-    // game.player2.update(time)
-    // Continuously rotate the container!
-    // * use delta to create frame-independent transform *
-    // container.rotation -= 0.01 * time.deltaTime
-  })
+const render = () => {
+  app.renderer.render(app.stage)
+}
+
+const update = (delta) => {
+  // Actualizar el temporizador de movimiento automático hacia abajo
+  game.fallTimer += delta
+
+  // Si el temporizador supera la velocidad de caída, mover la pieza hacia abajo
+  if (game.fallTimer >= FALL_SPEED) {
+    currentPiece.moveDown()
+    game.fallTimer = 0
+  }
+
+  handlePieceMovement(game.player.piece)
+  // Lógica de actualización del juego
+}
+
+const startGame = () => {
+  // Dibujar el tablero del juego
+  drawBoard(game)
+
+  // Generar una nueva pieza de Tetris
+  const currentPiece = generateRandomPiece()
+  console.log('🚀 ~ startGame ~ currentPiece:', currentPiece)
+  game.player.piece = currentPiece
 }
 
 export const displayCanvas = async (element) => {
-  await setup(element)
+  await init(element)
+  app.ticker.add(gameLoop)
 }
