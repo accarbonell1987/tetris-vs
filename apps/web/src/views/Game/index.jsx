@@ -1,22 +1,26 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { CustomLayout } from '../../components'
-import { displayCanvas } from './func/game'
+import { displayCanvas } from './game'
 
 const Game = () => {
-  useEffect(() => {
-    const element = document.getElementById('game')
-    if (element && !element?.hasChildNodes()) {
-      displayCanvas(element)
-    }
+  const gameRef = useRef(null)
+  const [mounted, setMounted] = useState(false)
 
-    return () => {
-      element.innerHTML = ''
-    }
+  useEffect(() => {
+    if (!mounted) setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (mounted && !gameRef.current.hasChildNodes()) {
+      displayCanvas(gameRef.current)
+    }
+  }, [mounted])
+
+  if (!mounted) return
 
   return (
     <CustomLayout>
-      <div id="game" />
+      <div ref={gameRef} id="game" />
     </CustomLayout>
   )
 }
