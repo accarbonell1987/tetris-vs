@@ -8,6 +8,7 @@ import {
 } from '../static/commons'
 import { generateRandomPiece } from '../func/piece'
 import { createBoard } from '../func/board'
+import { checkCollisions } from '../func/collitions'
 
 export class Game {
   constructor() {
@@ -57,6 +58,10 @@ export class Game {
     if (this.render.dropCounter > VELOCITY[this.state.level - 1].speed) {
       this.piece.position.y++
       this.render.dropCounter = 0
+    }
+
+    if (checkCollisions(this.piece, this.board)) {
+      this.piece.position.y--
     }
 
     this.draw()

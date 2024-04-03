@@ -1,12 +1,4 @@
 import { Game } from './classes/game'
-import {
-  BLOCK_SIZE,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  VELOCITY,
-  MOVEMENTS,
-  PIECES
-} from './static/commons'
 
 const game = new Game()
 

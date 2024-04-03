@@ -6,12 +6,9 @@ export const generateRandomPiece = () => {
   const randomShape = PIECES[randomIndex]
   const randomColor = '#fff' // Color aleatorio en formato hexadecimal
 
-  const piece = new Piece(
-    BOARD_WIDTH / 2 + randomShape[0].length / 2,
-    randomShape.length / 2,
-    randomShape,
-    randomColor
-  )
+  const x = Math.ceil(BOARD_WIDTH / 2 - randomShape[0].length / 2)
+
+  const piece = new Piece(x, 0, randomShape, randomColor)
 
   return piece
 }
