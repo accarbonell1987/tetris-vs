@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { CustomLayout } from '../../components'
-import { inject } from './t1'
+import { inject } from './tetris'
 
 const Game3 = () => {
   const gameRef = useRef(null)

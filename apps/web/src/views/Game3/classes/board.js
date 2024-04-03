@@ -14,7 +14,7 @@ export class Board {
   }
 
   draw(context) {
-    drawMatrix(context, this.matrix, this.color)
+    drawMatrix(context, this.matrix, '#FF0000')
   }
 
   update(context) {

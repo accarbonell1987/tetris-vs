@@ -1,11 +1,4 @@
-import {
-  BLOCK_SIZE,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  VELOCITY,
-  MOVEMENTS,
-  PIECES
-} from '../static/commons'
+import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, VELOCITY } from '../static/commons'
 import { generateRandomPiece } from '../func/piece'
 import { createBoard } from '../func/board'
 import { checkCollisions } from '../func/collitions'
@@ -62,8 +55,80 @@ export class Game {
 
     if (checkCollisions(this.piece, this.board)) {
       this.piece.position.y--
+      this.solidifyPiece()
+      this.removeRows()
     }
 
     this.draw()
+  }
+
+  moveLeft() {
+    this.piece.moveLeft()
+    if (checkCollisions(this.piece, this.board)) this.piece.moveRight()
+  }
+
+  moveRight() {
+    this.piece.moveRight()
+    if (checkCollisions(this.piece, this.board)) this.piece.moveLeft()
+  }
+
+  moveDown() {
+    this.piece.moveDown()
+    if (checkCollisions(this.piece, this.board)) {
+      this.piece.moveUp()
+      this.solidifyPiece()
+      this.removeRows()
+    }
+  }
+
+  rotate() {
+    const rotated = this.piece.rotate()
+    if (!checkCollisions(this.piece, this.board)) this.piece.shape = rotated
+  }
+
+  solidifyPiece() {
+    this.piece.shape.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if (value === 1) {
+          this.board.matrix[y + this.piece.position.y][x + this.piece.position.x] = 1
+        }
+      })
+    })
+    this.piece = generateRandomPiece()
+    this.gameOver()
+  }
+
+  removeRows() {
+    const rowsToRemove = []
+
+    this.board.matrix.forEach((row, y) => {
+      if (row.every((value) => value === 1)) {
+        rowsToRemove.push(y)
+      }
+    })
+
+    rowsToRemove.forEach((y) => {
+      this.board.matrix.splice(y, 1)
+      const newRow = Array(BOARD_WIDTH).fill(0)
+      this.board.matrix.unshift(newRow)
+    })
+
+    this.state.score += rowsToRemove.length * 10
+
+    let currentLevel = 1
+    for (const item of VELOCITY) {
+      if (item.score.max > this.state.score) {
+        this.state.level = currentLevel
+        break
+      }
+      currentLevel++
+    }
+  }
+
+  gameOver() {
+    //! gameover
+    if (checkCollisions(this.piece, this.board)) {
+      this.board.matrix.forEach((row) => row.fill(0))
+    }
   }
 }
