@@ -1,6 +1,8 @@
 import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, VELOCITY } from '../static/commons'
 import { generateRandomPiece } from '../func/piece'
 import { createBoard } from '../func/board'
+import { createImage } from '../func/utils'
+import bgSrc from '../../../assets/images/bg.jpeg'
 
 export class Game {
   constructor() {
@@ -34,8 +36,13 @@ export class Game {
   }
 
   draw() {
-    this.context.fillStyle = '#000'
-    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height)
+    const image = createImage(bgSrc, BOARD_WIDTH, BOARD_HEIGHT)
+    this.context.imageSmoothingEnabled = false
+    this.context.drawImage(image, 0, 0, 20, 20)
+
+    // this.context.fillStyle = '#000'
+    // this.context.fillRect(0, 0, this.canvas.width, this.canvas.height)
+    // this.context.imageSmoothingEnabled = true
 
     this.board.update(this.context)
     this.piece.update(this.context)
@@ -62,27 +69,35 @@ export class Game {
   }
 
   moveLeft() {
-    this.piece.moveLeft()
-    if (this.checkCollisions()) this.piece.moveRight()
+    if (this.piece) {
+      this.piece.moveLeft()
+      if (this.checkCollisions()) this.piece.moveRight()
+    }
   }
 
   moveRight() {
-    this.piece.moveRight()
-    if (this.checkCollisions()) this.piece.moveLeft()
+    if (this.piece) {
+      this.piece.moveRight()
+      if (this.checkCollisions()) this.piece.moveLeft()
+    }
   }
 
   moveDown() {
-    this.piece.moveDown()
-    if (this.checkCollisions()) {
-      this.piece.moveUp()
-      this.solidifyPiece()
-      this.removeRows()
+    if (this.piece) {
+      this.piece.moveDown()
+      if (this.checkCollisions()) {
+        this.piece.moveUp()
+        this.solidifyPiece()
+        this.removeRows()
+      }
     }
   }
 
   rotate() {
-    const rotated = this.piece.rotate()
-    if (!this.checkCollisions()) this.piece.shape = rotated
+    if (this.piece) {
+      const rotated = this.piece.rotate()
+      if (!this.checkCollisions()) this.piece.shape = rotated
+    }
   }
 
   checkCollisions() {
@@ -99,7 +114,7 @@ export class Game {
   solidifyPiece() {
     this.piece.shape.forEach((row, y) => {
       row.forEach((value, x) => {
-        if (value === 1) {
+        if (value !== 0) {
           this.board.matrix[y + this.piece.position.y][x + this.piece.position.x] = 1
         }
       })
@@ -138,7 +153,7 @@ export class Game {
   gameOver() {
     //! gameover
     if (this.checkCollisions()) {
-      this.board.matrix.forEach((row) => row.fill(0))
+      this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT)
     }
   }
 }

@@ -1,8 +1,6 @@
 import { Piece } from '../classes/piece'
 import { PIECES, BOARD_WIDTH } from '../static/commons'
-
-import blockWallSrc from '../../../assets/images/block-wall.png'
-import { createImage } from './utils'
+import { loadSprite } from './utils'
 
 export const generateRandomPiece = () => {
   const randomIndex = Math.floor(Math.random() * PIECES.length)
@@ -10,7 +8,8 @@ export const generateRandomPiece = () => {
 
   const x = Math.ceil(BOARD_WIDTH / 2 - randomShape[0].length / 2)
 
-  const image = createImage(blockWallSrc)
+  const index = randomShape[0].find((p) => p !== 0)
+  const image = loadSprite(index)
   const piece = new Piece(x, 0, randomShape, image)
 
   return piece
@@ -19,7 +18,7 @@ export const generateRandomPiece = () => {
 export const drawPiece = (context, piece) => {
   piece.shape.forEach((row, y) => {
     row.forEach((value, x) => {
-      if (value === 1) {
+      if (value !== 0) {
         context.drawImage(piece.image, x + piece.position.x, y + piece.position.y, 1, 1)
       }
     })
