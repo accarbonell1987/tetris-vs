@@ -1,19 +1,22 @@
 import React from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 
-import { Login, Lobby, Game3, Errors } from '../views'
+import { Login, Lobby, Game, Errors } from '../views'
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Lobby />
+    element: <Lobby />,
+    errorElement: <Errors />
   },
   {
     path: '/login',
-    element: <Login />
+    element: <Login />,
+    errorElement: <Errors />
   },
   {
     path: '/game',
-    element: <Game3 />
+    element: <Game />,
+    errorElement: <Errors />
   }
 ])

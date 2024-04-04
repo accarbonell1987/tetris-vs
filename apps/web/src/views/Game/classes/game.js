@@ -37,12 +37,11 @@ export class Game {
 
   draw() {
     const image = createImage(bgSrc, BOARD_WIDTH, BOARD_HEIGHT)
-    this.context.imageSmoothingEnabled = false
-    this.context.drawImage(image, 0, 0, 20, 20)
+    // this.context.imageSmoothingEnabled = false
+    // this.context.drawImage(image, 0, 0, 20, 20)
 
-    // this.context.fillStyle = '#000'
-    // this.context.fillRect(0, 0, this.canvas.width, this.canvas.height)
-    // this.context.imageSmoothingEnabled = true
+    this.context.fillStyle = '#000'
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     this.board.update(this.context)
     this.piece.update(this.context)
@@ -134,7 +133,11 @@ export class Game {
 
     rowsToRemove.forEach((y) => {
       this.board.matrix.splice(y, 1)
+
       const newRow = Array(BOARD_WIDTH).fill(0)
+      newRow[0] = 1
+      newRow[BOARD_WIDTH - 1] = 1
+
       this.board.matrix.unshift(newRow)
     })
 
