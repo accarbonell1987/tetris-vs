@@ -21,17 +21,32 @@ const animate = (time = 0) => {
 
 document.addEventListener('keydown', (event) => {
   switch (event.key) {
-    case MOVEMENTS.LEFT:
-      game.moveLeft()
+    case MOVEMENTS.LEFT_P1:
+      game.players.player1.moveLeft(game.board)
       break
-    case MOVEMENTS.RIGHT:
-      game.moveRight()
+    case MOVEMENTS.LEFT_P2:
+      game.players.player2.moveLeft(game.board)
       break
-    case MOVEMENTS.DOWN:
-      game.moveDown()
+    case MOVEMENTS.RIGHT_P1:
+      game.players.player1.moveRight(game.board)
       break
-    case MOVEMENTS.ROTATE:
-      game.rotate()
+    case MOVEMENTS.RIGHT_P2:
+      game.players.player2.moveRight(game.board)
+      break
+    case MOVEMENTS.DOWN_P1:
+      game.players.player1.moveDown(game.board)
+      break
+    case MOVEMENTS.DOWN_P2:
+      game.players.player2.moveDown(game.board)
+      break
+    case MOVEMENTS.ROTATE_P1:
+      game.players.player1.rotate(game.board)
+      break
+    case MOVEMENTS.ROTATE_P2:
+      game.players.player2.rotate(game.board)
+      break
+    case MOVEMENTS.PAUSE:
+      game.paused()
       break
 
     default:

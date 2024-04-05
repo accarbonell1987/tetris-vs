@@ -1,8 +1,8 @@
 import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, VELOCITY } from '../static/commons'
 import { generateRandomPiece } from '../func/piece'
 import { createBoard } from '../func/board'
-import { createImage } from '../func/utils'
-import bgSrc from '../../../assets/images/bg.jpeg'
+import { checkCollisions, solidifyPiece, removeRows, isGameOver } from '../func/game'
+import { Player } from './player'
 
 export class Game {
   constructor() {
@@ -10,14 +10,18 @@ export class Game {
     this.context = null
     this.state = {
       score: 0,
-      level: 1
+      level: 1,
+      paused: false,
+    }
+    this.players = {
+      player1: null,
+      player2: null,
     }
     this.render = {
       dropCounter: 0,
-      lastTime: 0
+      lastTime: 0,
     }
     this.board = null
-    this.piece = null
   }
 
   inject() {
@@ -32,11 +36,16 @@ export class Game {
 
   init() {
     this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT)
-    this.piece = generateRandomPiece()
+
+    this.players.player1 = new Player(generateRandomPiece())
+    this.players.player2 = new Player(generateRandomPiece())
+
+    this.players.player1.piece.position.x = 2
+    this.players.player2.piece.position.x = 6
   }
 
   draw() {
-    const image = createImage(bgSrc, BOARD_WIDTH, BOARD_HEIGHT)
+    // const image = createImage(bgSrc, BOARD_WIDTH, BOARD_HEIGHT)
     // this.context.imageSmoothingEnabled = false
     // this.context.drawImage(image, 0, 0, 20, 20)
 
@@ -44,7 +53,8 @@ export class Game {
     this.context.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     this.board.update(this.context)
-    this.piece.update(this.context)
+    this.players.player1.piece.update(this.context)
+    this.players.player2.piece.update(this.context)
   }
 
   update(time = 0) {
@@ -53,110 +63,38 @@ export class Game {
     this.render.lastTime = time
     this.render.dropCounter += deltaTime
 
+    const piecePlayer1 = this.players.player1.piece
+    const piecePlayer2 = this.players.player2.piece
+
     if (this.render.dropCounter > VELOCITY[this.state.level - 1].speed) {
-      this.piece.position.y++
+      piecePlayer1.position.y++
+      piecePlayer2.position.y++
       this.render.dropCounter = 0
     }
 
-    if (this.checkCollisions()) {
-      this.piece.position.y--
-      this.solidifyPiece()
-      this.removeRows()
+    if (checkCollisions(piecePlayer1, this.board)) {
+      piecePlayer1.position.y--
+      solidifyPiece(this.players.player1, this.board)
+
+      // Chequear si se acaba el juego
+      const gameOver = isGameOver(piecePlayer1, this.board)
+      if (gameOver) {
+        this.players.player1.lose = true
+      } else removeRows(this.players.player1, this.board)
+    }
+    if (checkCollisions(piecePlayer2, this.board)) {
+      piecePlayer2.position.y--
+      solidifyPiece(this.players.player2, this.board)
+
+      // Chequear si se acaba el juego
+      const gameOver = isGameOver(piecePlayer2, this.board)
+      if (gameOver) {
+        this.players.player2.lose = true
+      } else removeRows(this.players.player2, this.board)
     }
 
     this.draw()
   }
 
-  moveLeft() {
-    if (this.piece) {
-      this.piece.moveLeft()
-      if (this.checkCollisions()) this.piece.moveRight()
-    }
-  }
-
-  moveRight() {
-    if (this.piece) {
-      this.piece.moveRight()
-      if (this.checkCollisions()) this.piece.moveLeft()
-    }
-  }
-
-  moveDown() {
-    if (this.piece) {
-      this.piece.moveDown()
-      if (this.checkCollisions()) {
-        this.piece.moveUp()
-        this.solidifyPiece()
-        this.removeRows()
-      }
-    }
-  }
-
-  rotate() {
-    if (this.piece) {
-      const rotated = this.piece.rotate()
-      if (!this.checkCollisions()) this.piece.shape = rotated
-    }
-  }
-
-  checkCollisions() {
-    return this.piece.shape.find((row, y) => {
-      return row.find((value, x) => {
-        return (
-          value !== 0 &&
-          this.board.matrix[y + this.piece.position.y]?.[x + this.piece.position.x] !== 0
-        )
-      })
-    })
-  }
-
-  solidifyPiece() {
-    this.piece.shape.forEach((row, y) => {
-      row.forEach((value, x) => {
-        if (value !== 0) {
-          this.board.matrix[y + this.piece.position.y][x + this.piece.position.x] = 1
-        }
-      })
-    })
-    this.piece = generateRandomPiece()
-    this.gameOver()
-  }
-
-  removeRows() {
-    const rowsToRemove = []
-
-    this.board.matrix.forEach((row, y) => {
-      if (row.every((value) => value === 1)) {
-        rowsToRemove.push(y)
-      }
-    })
-
-    rowsToRemove.forEach((y) => {
-      this.board.matrix.splice(y, 1)
-
-      const newRow = Array(BOARD_WIDTH).fill(0)
-      newRow[0] = 1
-      newRow[BOARD_WIDTH - 1] = 1
-
-      this.board.matrix.unshift(newRow)
-    })
-
-    this.state.score += rowsToRemove.length * 10
-
-    let currentLevel = 1
-    for (const item of VELOCITY) {
-      if (item.score.max > this.state.score) {
-        this.state.level = currentLevel
-        break
-      }
-      currentLevel++
-    }
-  }
-
-  gameOver() {
-    //! gameover
-    if (this.checkCollisions()) {
-      this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT)
-    }
-  }
+  pauseGame() {}
 }

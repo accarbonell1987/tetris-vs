@@ -19,45 +19,50 @@ export const PIECES = [
   // J
   [
     [3, 0, 0],
-    [3, 3, 3]
+    [3, 3, 3],
   ],
 
   // L
   [
     [0, 0, 4],
-    [4, 4, 4]
+    [4, 4, 4],
   ],
 
   // O
   [
     [5, 5],
-    [5, 5]
+    [5, 5],
   ],
 
   // S
   [
     [0, 6, 6],
-    [6, 6, 0]
+    [6, 6, 0],
   ],
 
   // T
   [
     [0, 7, 0],
-    [7, 7, 7]
+    [7, 7, 7],
   ],
 
   // Z
   [
     [8, 8, 0],
-    [0, 8, 8]
-  ]
+    [0, 8, 8],
+  ],
 ]
 
 export const MOVEMENTS = {
-  LEFT: 'ArrowLeft',
-  RIGHT: 'ArrowRight',
-  DOWN: 'ArrowDown',
-  ROTATE: 'ArrowUp'
+  LEFT_P1: 'a',
+  LEFT_P2: 'ArrowLeft',
+  RIGHT_P1: 'd',
+  RIGHT_P2: 'ArrowRight',
+  DOWN_P1: 's',
+  DOWN_P2: 'ArrowDown',
+  ROTATE_P1: 'w',
+  ROTATE_P2: 'ArrowUp',
+  PAUSE: 'Space',
 }
 
 export const VELOCITY = [
@@ -70,5 +75,5 @@ export const VELOCITY = [
   { score: { min: 601, max: 700 }, speed: 400 },
   { score: { min: 701, max: 800 }, speed: 300 },
   { score: { min: 801, max: 900 }, speed: 200 },
-  { score: { min: 901, max: Infinity }, speed: 100 }
+  { score: { min: 901, max: Infinity }, speed: 100 },
 ]
