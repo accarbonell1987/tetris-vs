@@ -19,5 +19,6 @@
   "license": "ISC",
   "devDependencies": {
     "kill-port": "^2.0.1"
-  }
+  },
+  "dependencies": {}
 }

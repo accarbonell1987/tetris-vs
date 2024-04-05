@@ -1,0 +1,6 @@
+.cardFooter {
+  flex-direction: column;
+  gap: 0.8rem;
+
+  flex-basis: 100% !important;
+}

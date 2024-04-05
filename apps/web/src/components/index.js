@@ -1,3 +1,6 @@
 export { default as CustomLayout } from './Layout'
 export { default as CustomContainer } from './Container'
 export { default as CustomCard } from './Card'
+export { default as CustomInput } from './Input'
+export { default as CustomForm } from './Form'
+export { default as CustomSpan } from './Span'
