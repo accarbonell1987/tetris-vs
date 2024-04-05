@@ -6,23 +6,37 @@ import { Chars } from '../../common/constants';
 
 const api = 'https://api.multiavatar.com/';
 
-export const fetchRandomAvatars = async ({ amount }) => {
+export const fetchAvatar = async code => {
+  const endpoint = `${api}${code}`;
   try {
-    const avatars = [];
+    const response = await axios.get(endpoint, { timeout: 2000 });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+};
 
-    for (let index = 0; index < amount; index++) {
-      const avatarName = GetRandomWordFromArrayAndLength(Chars, amount);
-      const endpoint = `${api}${avatarName}`;
-      const { data } = await axios.get(endpoint, { timeout: 2000 });
+export const fetchRandomAvatars = async amount => {
+  try {
+    const responses = [];
 
-      const image = ConvertToBase64(data);
-      avatars[index] = image;
+    const request = {
+      retry: 0,
+      limits: 10
+    };
+
+    let index = 0;
+    while (index < amount && request.retry <= request.limits) {
+      const code = GetRandomWordFromArrayAndLength(Chars, amount);
+      const response = await fetchAvatar(code);
+      if (response.status === 200) {
+        const image = ConvertToBase64(response?.data);
+        responses[index++] = image;
+      } else request.retry++;
     }
 
-    console.log('🚀 ~ fetchRandomAvatars ~ avatars:', avatars);
-    return avatars;
+    return responses;
   } catch (error) {
-    console.log(error);
-    return error;
+    throw Error('Error fetch Randoms Avatars');
   }
 };

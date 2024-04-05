@@ -5,6 +5,7 @@ import { CustomLayout, CustomCard } from '../../components';
 import { useNavigate } from 'react-router-dom';
 import { useFetchAvatars } from '../../hooks';
 import { fetchRandomAvatars } from '../../services/api/servicesAvatars';
+import { GetImage } from '../../utils/images';
 
 const SubmitButtonPresentational = () => {
   return (
@@ -14,10 +15,15 @@ const SubmitButtonPresentational = () => {
   );
 };
 
-const ListOfAvatars = ({ avatars }) => {
+const ListOfAvatars = ({ data }) => {
+  if (!data) return;
+
   return (
-    <div className="flex gap-0">
-      <Avatar className="w-20 h-20 text-large" src="" />
+    <div className="flex gap-x-10">
+      {data?.map((avatar, index) => {
+        const image = GetImage(avatar);
+        return <Avatar key={`avatar-${index}`} className="w-20 h-20 text-large" src={image} />;
+      })}
     </div>
   );
 };
@@ -30,24 +36,39 @@ const Loading = () => {
   );
 };
 
-const Login = () => {
-  const [avatars, setAvatars] = useState({ data: null, loading: true, error: null });
-
-  useEffect(() => {
-    const response = fetchRandomAvatars({ amount: 4 });
-    if (response.status === 200) setAvatars({ data: response.data, loading: false, error: null });
-    else setAvatars({ data: null, loading: false, error: response.error });
-  }, []);
-
+const Error = message => {
   return (
-    <CustomLayout>
-      {avatars.loading ? (
-        <Loading />
-      ) : (
-        <CustomCard header={ListOfAvatars({ avatars: avatars.data })} />
-      )}
-    </CustomLayout>
+    <div className="flex gap-4">
+      <h1>{message}</h1>
+    </div>
   );
+};
+
+const Login = () => {
+  // const [avatars, setAvatars] = useState({ data: null, loading: true, error: null });
+
+  // const getAvatars = async () => {
+  //   const amountAvatarsToLoad = 4;
+  //   const response = await fetchRandomAvatars(amountAvatarsToLoad);
+  //   console.log('🚀 ~ getAvatars ~ response:', response);
+  //   setAvatars({ data: response, loading: false, error: null });
+  // };
+
+  // useEffect(() => {
+  //   getAvatars();
+  // }, []);
+
+  const { data, error, isLoading } = useFetchAvatars();
+
+  const component = isLoading ? (
+    <Loading />
+  ) : error ? (
+    <Error message={error} />
+  ) : (
+    <CustomCard header={ListOfAvatars({ data })} />
+  );
+
+  return <CustomLayout>{component}</CustomLayout>;
 };
 
 export default Login;

@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchRandomAvatars } from '../../services/api/servicesAvatars';
 
+const amountAvatarsToLoad = 4;
+
 const useFetchAvatars = () => {
   const { data, error, isPending, isLoading } = useQuery({
     queryKey: ['fetchRandomAvatars'],
-    queryFn: async () => await fetchRandomAvatars({ ammount: 4 })
+    queryFn: async () => await fetchRandomAvatars(amountAvatarsToLoad)
   });
 
   return { data, error, isLoading, isPending };
