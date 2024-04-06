@@ -8,6 +8,9 @@ export const BOARD_HEIGHT = 20
 // Velocidad de caída de las piezas (en milisegundos)
 export const FALL_SPEED = 1000 // 1 segundo
 
+export const SPAWN_P1 = 2
+export const SPAWN_P2 = 6
+
 // Wall
 export const WALL = [[1]]
 
@@ -53,14 +56,14 @@ export const PIECES = [
   ],
 ]
 
-export const MOVEMENTS = {
-  LEFT_P1: 'a',
+export const MOVEMENTS_CODES = {
+  LEFT_P1: 'KeyA',
   LEFT_P2: 'ArrowLeft',
-  RIGHT_P1: 'd',
+  RIGHT_P1: 'KeyD',
   RIGHT_P2: 'ArrowRight',
-  DOWN_P1: 's',
+  DOWN_P1: 'KeyS',
   DOWN_P2: 'ArrowDown',
-  ROTATE_P1: 'w',
+  ROTATE_P1: 'KeyW',
   ROTATE_P2: 'ArrowUp',
   PAUSE: 'Space',
 }

@@ -1,4 +1,4 @@
-import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, VELOCITY } from '../static/commons'
+import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, VELOCITY, SPAWN_P1, SPAWN_P2 } from '../static/commons'
 import { generateRandomPiece } from '../func/piece'
 import { createBoard } from '../func/board'
 import { checkCollisions, solidifyPiece, removeRows, isGameOver } from '../func/game'
@@ -11,7 +11,7 @@ export class Game {
     this.state = {
       score: 0,
       level: 1,
-      paused: false,
+      paused: true,
     }
     this.players = {
       player1: null,
@@ -40,8 +40,11 @@ export class Game {
     this.players.player1 = new Player(generateRandomPiece())
     this.players.player2 = new Player(generateRandomPiece())
 
-    this.players.player1.piece.position.x = 2
-    this.players.player2.piece.position.x = 6
+    this.players.player1.spawn = SPAWN_P1
+    this.players.player2.spawn = SPAWN_P2
+
+    this.players.player1.piece.position.x = SPAWN_P1
+    this.players.player2.piece.position.x = SPAWN_P2
   }
 
   draw() {
@@ -63,38 +66,53 @@ export class Game {
     this.render.lastTime = time
     this.render.dropCounter += deltaTime
 
-    const piecePlayer1 = this.players.player1.piece
-    const piecePlayer2 = this.players.player2.piece
+    if (!this.state.paused) {
+      const player1 = this.players.player1
+      const player2 = this.players.player2
 
-    if (this.render.dropCounter > VELOCITY[this.state.level - 1].speed) {
-      piecePlayer1.position.y++
-      piecePlayer2.position.y++
-      this.render.dropCounter = 0
-    }
+      const piecePlayer1 = player1.piece
+      const piecePlayer2 = player2.piece
 
-    if (checkCollisions(piecePlayer1, this.board)) {
-      piecePlayer1.position.y--
-      solidifyPiece(this.players.player1, this.board)
+      if (this.render.dropCounter > VELOCITY[this.state.level - 1].speed) {
+        piecePlayer1.position.y++
+        piecePlayer2.position.y++
+        this.render.dropCounter = 0
+      }
 
-      // Chequear si se acaba el juego
-      const gameOver = isGameOver(piecePlayer1, this.board)
-      if (gameOver) {
-        this.players.player1.lose = true
-      } else removeRows(this.players.player1, this.board)
-    }
-    if (checkCollisions(piecePlayer2, this.board)) {
-      piecePlayer2.position.y--
-      solidifyPiece(this.players.player2, this.board)
+      if (checkCollisions(piecePlayer1, this.board)) {
+        piecePlayer1.position.y--
+        solidifyPiece(player1, this.board)
 
-      // Chequear si se acaba el juego
-      const gameOver = isGameOver(piecePlayer2, this.board)
-      if (gameOver) {
-        this.players.player2.lose = true
-      } else removeRows(this.players.player2, this.board)
+        // Chequear si se acaba el juego
+        if (isGameOver(this.board)) {
+          player1.lose = true
+          this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT)
+        } else {
+          player1.piece = generateRandomPiece()
+          player1.piece.position.x = player1.spawn
+          removeRows(player1, this.board)
+        }
+      }
+      if (checkCollisions(piecePlayer2, this.board)) {
+        piecePlayer2.position.y--
+        solidifyPiece(player2, this.board)
+
+        // Chequear si se acaba el juego
+        if (isGameOver(this.board)) {
+          player2.lose = true
+          this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT)
+        } else {
+          player2.piece = generateRandomPiece()
+          player2.piece.position.x = player2.spawn
+          removeRows(player2, this.board)
+        }
+      }
     }
 
     this.draw()
   }
 
-  pauseGame() {}
+  pauseGame() {
+    this.state.paused = !this.state.paused
+  }
 }

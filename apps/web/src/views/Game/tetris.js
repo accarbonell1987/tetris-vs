@@ -1,5 +1,5 @@
 import { Game } from './classes/game'
-import { MOVEMENTS } from './static/commons'
+import { MOVEMENTS_CODES } from './static/commons'
 
 const game = new Game()
 
@@ -20,33 +20,33 @@ const animate = (time = 0) => {
 }
 
 document.addEventListener('keydown', (event) => {
-  switch (event.key) {
-    case MOVEMENTS.LEFT_P1:
+  switch (event.code) {
+    case MOVEMENTS_CODES.LEFT_P1:
       game.players.player1.moveLeft(game.board)
       break
-    case MOVEMENTS.LEFT_P2:
+    case MOVEMENTS_CODES.LEFT_P2:
       game.players.player2.moveLeft(game.board)
       break
-    case MOVEMENTS.RIGHT_P1:
+    case MOVEMENTS_CODES.RIGHT_P1:
       game.players.player1.moveRight(game.board)
       break
-    case MOVEMENTS.RIGHT_P2:
+    case MOVEMENTS_CODES.RIGHT_P2:
       game.players.player2.moveRight(game.board)
       break
-    case MOVEMENTS.DOWN_P1:
+    case MOVEMENTS_CODES.DOWN_P1:
       game.players.player1.moveDown(game.board)
       break
-    case MOVEMENTS.DOWN_P2:
+    case MOVEMENTS_CODES.DOWN_P2:
       game.players.player2.moveDown(game.board)
       break
-    case MOVEMENTS.ROTATE_P1:
+    case MOVEMENTS_CODES.ROTATE_P1:
       game.players.player1.rotate(game.board)
       break
-    case MOVEMENTS.ROTATE_P2:
+    case MOVEMENTS_CODES.ROTATE_P2:
       game.players.player2.rotate(game.board)
       break
-    case MOVEMENTS.PAUSE:
-      game.paused()
+    case MOVEMENTS_CODES.PAUSE:
+      game.pauseGame()
       break
 
     default:

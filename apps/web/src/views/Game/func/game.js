@@ -1,4 +1,3 @@
-import { generateRandomPiece } from './piece'
 import { VELOCITY, BOARD_WIDTH } from '../static/commons'
 
 export const checkCollisions = (piece, board) => {
@@ -17,8 +16,6 @@ export const solidifyPiece = (player, board) => {
       }
     })
   })
-  player.piece = generateRandomPiece()
-  // gameOver(piece, board)
 }
 
 export const removeRows = (player, board) => {
@@ -52,7 +49,8 @@ export const removeRows = (player, board) => {
   }
 }
 
-export const isGameOver = (piece, board) => {
-  //! gameover
-  return checkCollisions(piece, board)
+export const isGameOver = (board) => {
+  const row = board.matrix[0]
+  const anyNumber = row.find((p, index) => p !== 0 && index !== 0 && index !== 11)
+  return !!anyNumber
 }
