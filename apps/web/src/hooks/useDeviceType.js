@@ -1,29 +1,24 @@
 import { useState, useEffect } from 'react'
+import { useMediaQuery } from 'react-responsive'
 
-const deviceStatics = {
-  deviceType: '',
-  isMobile: null,
-  isAndroid: false,
-  isIphone: false,
-  isWeb: false
-}
-
-const useDeviceType = () => {
-  const [device, setDevice] = useState(deviceStatics)
+const useDevice = () => {
+  const [deviceType, setDeviceType] = useState('')
 
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera
 
     if (/android/i.test(userAgent)) {
-      setDevice({ ...device, deviceType: 'android', isMobile: true, isAndroid: true })
+      setDeviceType('android')
     } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-      setDevice({ ...device, deviceType: 'iphone', isMobile: true, isIphone: true })
+      setDeviceType('iphone')
     } else {
-      setDevice({ ...device, deviceType: 'web', isMobile: false, isWeb: true })
+      setDeviceType('unknown')
     }
   }, [])
 
-  return { device }
+  const isSmallScreen = useMediaQuery({ query: '(max-width: 576px)' })
+
+  return { deviceType, isSmallScreen }
 }
 
-export default useDeviceType
+export default useDevice

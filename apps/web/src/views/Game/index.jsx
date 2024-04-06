@@ -1,11 +1,14 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { CustomLayout } from '../../components'
 import { inject } from './tetris'
-import { Card, CardHeader, CardBody, CardFooter, Divider, Link, Image } from '@nextui-org/react'
+import { Card, CardHeader, CardBody, CardFooter, Divider, Link } from '@nextui-org/react'
+import { Player } from './components'
+import { useDevice } from '../../hooks'
 
 const Game = () => {
   const gameRef = useRef(null)
   const [mounted, setMounted] = useState(false)
+  const { deviceType } = useDevice()
 
   useEffect(() => {
     if (!mounted) setMounted(true)
@@ -22,17 +25,21 @@ const Game = () => {
   return (
     <CustomLayout>
       <Card className="max-w-[400px]">
-        <CardHeader className="flex gap-3">
-          <Image
-            alt="nextui logo"
-            height={40}
-            radius="sm"
-            src="https://avatars.githubusercontent.com/u/86160567?s=200&v=4"
-            width={40}
-          />
-          <div className="flex flex-col">
-            <p className="text-md">Player 1</p>
-            <p className="text-small text-default-500">tetris.org</p>
+        <CardHeader className="flex gap-3 justify-center">
+          <div className="flex h-7 justify-evenly items-center space-x-4 text-small">
+            <Player
+              name={'Piño'}
+              image={'https://i.pravatar.cc/150?u=a042581f4e29026024d'}
+              score={`0 / 3000`}
+              description={'CAMARADA'}
+            />
+            <Divider orientation="vertical" />
+            <Player
+              name={'Tunga'}
+              image={'https://i.pravatar.cc/150?u=a04258114e29026702d'}
+              score={`0 / 3000`}
+              description={'TENIENTE'}
+            />
           </div>
         </CardHeader>
         <Divider />
@@ -41,9 +48,10 @@ const Game = () => {
         </CardBody>
         <Divider />
         <CardFooter>
-          <Link isExternal showAnchorIcon href="https://github.com/nextui-org/nextui">
-            Buttons
-          </Link>
+
+            {deviceType !== 'unknown' ? 'PC' : 'Mobile'}
+
+          </div>
         </CardFooter>
       </Card>
     </CustomLayout>
