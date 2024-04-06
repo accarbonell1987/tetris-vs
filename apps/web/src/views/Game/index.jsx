@@ -47,12 +47,7 @@ const Game = () => {
           <canvas ref={gameRef}></canvas>
         </CardBody>
         <Divider />
-        <CardFooter>
-
-            {deviceType !== 'unknown' ? 'PC' : 'Mobile'}
-
-          </div>
-        </CardFooter>
+        <CardFooter>{deviceType !== 'unknown' ? 'PC' : 'Mobile'}</CardFooter>
       </Card>
     </CustomLayout>
   )
