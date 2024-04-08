@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const eslintrc = require('./eslint/.eslintrc.cjs')
 const prettierconfig = require('./prettier/.prettierrc.cjs')
 

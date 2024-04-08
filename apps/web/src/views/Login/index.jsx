@@ -4,7 +4,6 @@ import { Button, Chip, Avatar, Spinner } from '@nextui-org/react';
 import { CustomLayout, CustomCard } from '../../components';
 import { useNavigate } from 'react-router-dom';
 import { useFetchAvatars } from '../../hooks';
-import { fetchRandomAvatars } from '../../services/api/servicesAvatars';
 import { GetImage } from '../../utils/images';
 
 const SubmitButtonPresentational = () => {
@@ -45,19 +44,6 @@ const Error = message => {
 };
 
 const Login = () => {
-  // const [avatars, setAvatars] = useState({ data: null, loading: true, error: null });
-
-  // const getAvatars = async () => {
-  //   const amountAvatarsToLoad = 4;
-  //   const response = await fetchRandomAvatars(amountAvatarsToLoad);
-  //   console.log('🚀 ~ getAvatars ~ response:', response);
-  //   setAvatars({ data: response, loading: false, error: null });
-  // };
-
-  // useEffect(() => {
-  //   getAvatars();
-  // }, []);
-
   const { data, error, isLoading } = useFetchAvatars();
 
   const component = isLoading ? (

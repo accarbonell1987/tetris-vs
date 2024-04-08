@@ -1,10 +1,19 @@
 import { Game } from './classes/game'
 import { MOVEMENTS_CODES } from './static/commons'
 
-const game = new Game()
+let game = null
+
+export const getGameInstance = () => {
+  if (!game) {
+    game = new Game()
+    game.init()
+  }
+  return game
+}
 
 export const inject = (element) => {
   if (!element) return
+  const game = getGameInstance()
 
   game.inject(element)
   game.init()
@@ -13,6 +22,7 @@ export const inject = (element) => {
 }
 
 const animate = (time = 0) => {
+  const game = getGameInstance()
   requestAnimationFrame(animate)
   game.context.clearRect(0, 0, game.canvas.width, game.canvas.height)
 
@@ -20,6 +30,7 @@ const animate = (time = 0) => {
 }
 
 document.addEventListener('keydown', (event) => {
+  const game = getGameInstance()
   switch (event.code) {
     case MOVEMENTS_CODES.LEFT_P1:
       game.players.player1.moveLeft(game.board)

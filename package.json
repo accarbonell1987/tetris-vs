@@ -1,5 +1,5 @@
 {
-  "name": "tetris-vs",
+  "name": "tetris",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "preview": "pnpm  --parallel --filter \"./**\" preview",
     "stop": "kill-port --port 5000,5001",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev-web": "cd ./apps/web && pnpm run dev"
+    "web": "cd ./apps/web && pnpm run dev"
   },
   "workspaces": [
     "./packages/*",

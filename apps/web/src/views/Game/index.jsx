@@ -1,12 +1,16 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useMemo } from 'react'
 import { CustomLayout } from '../../components'
-import { inject } from './tetris'
+import { getGameInstance, inject } from './tetris'
 import { Card, CardHeader, CardBody, CardFooter, Divider, Link } from '@nextui-org/react'
 import { Player } from './components'
 import { useDevice } from '../../hooks'
 
-const Game = () => {
+const GameComponent = () => {
   const gameRef = useRef(null)
+
+  // Create game only once
+  const game = useMemo(() => getGameInstance(), [])
+
   const [mounted, setMounted] = useState(false)
   const { deviceType } = useDevice()
 
@@ -20,6 +24,10 @@ const Game = () => {
     }
   }, [mounted])
 
+  useEffect(() => {
+    console.log(game)
+  }, [game.state.paused])
+
   if (!mounted) return
 
   return (
@@ -30,14 +38,14 @@ const Game = () => {
             <Player
               name={'Piño'}
               image={'https://i.pravatar.cc/150?u=a042581f4e29026024d'}
-              score={`0 / 3000`}
+              score={`${0} / 3000`}
               description={'CAMARADA'}
             />
             <Divider orientation="vertical" />
             <Player
               name={'Tunga'}
               image={'https://i.pravatar.cc/150?u=a04258114e29026702d'}
-              score={`0 / 3000`}
+              score={`${0} / 3000`}
               description={'TENIENTE'}
             />
           </div>
@@ -53,4 +61,4 @@ const Game = () => {
   )
 }
 
-export default Game
+export default GameComponent
