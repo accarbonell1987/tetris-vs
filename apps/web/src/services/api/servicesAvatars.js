@@ -12,7 +12,14 @@ import spyq from '../../assets/avatars/spyq.svg';
 import xevc from '../../assets/avatars/xevc.svg';
 
 const api = 'https://api.multiavatar.com/';
-const avatars = [bxon, cxml, nqto, quvm, spyq, xevc];
+const avatars = [
+  { key: 'bxon', value: bxon },
+  { key: 'cxml', value: cxml },
+  { key: 'nqto', value: nqto },
+  { key: 'quvm', value: quvm },
+  { key: 'spyq', value: spyq },
+  { key: 'xevc', value: xevc }
+];
 
 export const fetchAvatar = async code => {
   const endpoint = `${api}${code}`;
@@ -27,30 +34,38 @@ export const fetchAvatar = async code => {
 export const fetchRandomAvatars = async amount => {
   try {
     const responses = [];
+    const codes = [];
 
     const request = {
       retry: 0,
       limits: 10
     };
 
+    // fetch a la api hasta que se alcance el retry
     let index = 0;
     while (index < amount && request.retry <= request.limits) {
       const code = GetRandomWordFromArrayAndLength(Chars, amount);
       const response = await fetchAvatar(code);
+
       if (response.status === 200) {
         const base64 = ConvertToBase64(response?.data);
         const image = GetImage(base64);
 
         responses[index++] = image;
+        codes.push(code);
       } else {
         request.retry++;
       }
     }
 
-    if (responses.length < 4) {
-      for (let index = responses.length; index < amount; index++) {
-        const any = GetRandomElementFromList(avatars);
-        responses.push(any);
+    // escoger los avatares de la lista estatica
+    while (index < amount) {
+      const element = GetRandomElementFromList(avatars);
+
+      if (!codes.some(p => p === element.key)) {
+        responses.push(element.value);
+        codes.push(element.key);
+        index++;
       }
     }
 
