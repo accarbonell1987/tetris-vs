@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-import { GetRandomWordFromArrayAndLength } from '../../utils/random';
-import { ConvertToBase64 } from '../../utils/images';
+import { GetRandomElementFromList, GetRandomWordFromArrayAndLength } from '../../utils/random';
+import { ConvertToBase64, GetImage } from '../../utils/images';
 import { Chars } from '../../common/constants';
 
+import bxon from '../../assets/avatars/bxon.svg';
+import cxml from '../../assets/avatars/cxml.svg';
+import nqto from '../../assets/avatars/nqto.svg';
+import quvm from '../../assets/avatars/quvm.svg';
+import spyq from '../../assets/avatars/spyq.svg';
+import xevc from '../../assets/avatars/xevc.svg';
+
 const api = 'https://api.multiavatar.com/';
+const avatars = [bxon, cxml, nqto, quvm, spyq, xevc];
 
 export const fetchAvatar = async code => {
   const endpoint = `${api}${code}`;
@@ -30,9 +38,20 @@ export const fetchRandomAvatars = async amount => {
       const code = GetRandomWordFromArrayAndLength(Chars, amount);
       const response = await fetchAvatar(code);
       if (response.status === 200) {
-        const image = ConvertToBase64(response?.data);
+        const base64 = ConvertToBase64(response?.data);
+        const image = GetImage(base64);
+
         responses[index++] = image;
-      } else request.retry++;
+      } else {
+        request.retry++;
+      }
+    }
+
+    if (responses.length < 4) {
+      for (let index = responses.length; index < amount; index++) {
+        const any = GetRandomElementFromList(avatars);
+        responses.push(any);
+      }
     }
 
     return responses;
