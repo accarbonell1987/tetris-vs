@@ -10,6 +10,8 @@ import nqto from '../../assets/avatars/nqto.svg';
 import quvm from '../../assets/avatars/quvm.svg';
 import spyq from '../../assets/avatars/spyq.svg';
 import xevc from '../../assets/avatars/xevc.svg';
+import enfp from '../../assets/avatars/enfp.svg';
+import geve from '../../assets/avatars/geve.svg';
 
 const api = 'https://api.multiavatar.com/';
 const avatars = [
@@ -18,7 +20,9 @@ const avatars = [
   { key: 'nqto', value: nqto },
   { key: 'quvm', value: quvm },
   { key: 'spyq', value: spyq },
-  { key: 'xevc', value: xevc }
+  { key: 'xevc', value: xevc },
+  { key: 'enfp', value: enfp },
+  { key: 'geve', value: geve }
 ];
 
 export const fetchAvatar = async code => {
@@ -44,7 +48,7 @@ export const fetchRandomAvatars = async amount => {
     // fetch a la api hasta que se alcance el retry
     let index = 0;
     while (index < amount && request.retry <= request.limits) {
-      const code = GetRandomWordFromArrayAndLength(Chars, amount);
+      const code = GetRandomWordFromArrayAndLength(Chars, 4);
       const response = await fetchAvatar(code);
 
       if (response.status === 200) {
