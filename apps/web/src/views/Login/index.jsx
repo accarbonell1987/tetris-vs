@@ -7,20 +7,25 @@ import { useFetchAvatars } from '../../hooks';
 import { GetImage } from '../../utils/images';
 
 const SubmitButtonPresentational = () => {
+  const onClick = () => {
+    
+  }
   return (
-    <Button type={'submit'} color="primary">
+    <Button type={'submit'} color="primary" onClick={onClick}>
       Entrar
     </Button>
   );
 };
 
-const ListOfAvatars = ({ data, selected,  setSelected, setSelectedAvatar }) => {
+const ListOfAvatars = ({ data, setSelectedAvatar }) => {
+  const [selected, setSelected] = useState(false);
   if(!data) return null;
   return (
     <div className="flex gap-x-10">
       {data?.map((avatar, index) => {
         const image = GetImage(avatar);
-        return <Avatar key={`avatar-${index}`} className="w-20 h-20 text-large"  src={image} isBordered={false} color='primary' onClick={() => {
+        return <Avatar key={`avatar-${index}`} className="w-20 h-20 text-large"  src={image} isBordered={selected} color='primary' onClick={() => {
+          setSelected(!selected);
           setSelectedAvatar({index: index , image: image})
         }} />;
       })}
@@ -28,7 +33,9 @@ const ListOfAvatars = ({ data, selected,  setSelected, setSelectedAvatar }) => {
   );
 };
 
-const NicknameInput = ({selectedAvatar}) => {
+const NicknameInput = ({selectedAvatar }) => {
+  const [value, setValue] = useState("");
+
   return (
     <div className='flex flex-col gap-y-3'>
       <label htmlFor="nickname">
@@ -39,6 +46,8 @@ const NicknameInput = ({selectedAvatar}) => {
         <Input
           id='nickname'
           isRequired
+          value={value}
+          onValueChange={setValue}
           type="text"
           placeholder="Ingresa tu nickname"
         />
@@ -65,9 +74,7 @@ const Error = message => {
 };
 
 const Login = () => {
-  const [selected, setSelected] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState
-  ({index: null, image: false});
+  const [selectedAvatar, setSelectedAvatar] = useState({index: null, image: false});
   
   const { data, error, isLoading } = useFetchAvatars();
 
@@ -76,7 +83,11 @@ const Login = () => {
   ) : error ? (
     <Error message={error} />
   ) : (
-    <CustomCard header={ListOfAvatars({ data, selected, setSelected, setSelectedAvatar })} headDivider={true} body={NicknameInput({selectedAvatar})} />
+    <CustomCard 
+      header={<ListOfAvatars data={data} setSelectedAvatar={setSelectedAvatar} />} 
+      headDivider={true} 
+      body={<NicknameInput selectedAvatar={selectedAvatar} />} 
+    />
   );
 
   return <CustomLayout>{component}</CustomLayout>;
