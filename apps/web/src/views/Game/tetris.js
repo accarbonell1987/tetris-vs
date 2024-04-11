@@ -1,18 +1,23 @@
-import { Game } from './classes/game'
 import { MOVEMENTS_CODES } from './static/commons'
 
 let game = null
 
+// Singleton
 export const getGameInstance = () => {
-  if (!game) {
-    game = new Game()
-    game.init()
-  }
+  // if (!game) {
+  //   game = new Game()
+  //   game.init()
+  // }
   return game
+}
+
+export const setGameIntance = (g) => {
+  game = g
 }
 
 export const inject = (element) => {
   if (!element) return
+
   const game = getGameInstance()
 
   game.inject(element)

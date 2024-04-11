@@ -12,10 +12,10 @@
   },
   "workspaces": [
     "./packages/*",
-    "./apps/*"
+    "./apps/**"
   ],
   "keywords": [],
-  "author": "",
+  "author": "AC & Co.",
   "license": "ISC",
   "devDependencies": {
     "kill-port": "^2.0.1"

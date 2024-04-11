@@ -1,34 +1,31 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react'
-import { CustomLayout } from '../../components'
-import { getGameInstance, inject } from './tetris'
-import { Card, CardHeader, CardBody, CardFooter, Divider, Link } from '@nextui-org/react'
-import { Player } from './components'
-import { useDevice } from '../../hooks'
+import React, { useRef, useState, useEffect } from 'react';
+import { CustomLayout } from '../../components';
+import { inject, setGameIntance } from './tetris.js';
+import { Card, CardHeader, CardBody, CardFooter, Divider } from '@nextui-org/react';
+import { Player } from './components';
+import { useDevice } from '../../hooks';
+import { Game } from './classes/game';
 
 const GameComponent = () => {
-  const gameRef = useRef(null)
+  const gameRef = useRef(null);
 
-  // Create game only once
-  const game = useMemo(() => getGameInstance(), [])
-
-  const [mounted, setMounted] = useState(false)
-  const { deviceType } = useDevice()
+  const [game, setGame] = useState({ gameObject: null, mounted: false });
+  const { deviceType } = useDevice();
 
   useEffect(() => {
-    if (!mounted) setMounted(true)
-  }, [])
+    const gameObject = new Game();
+
+    setGameIntance(gameObject);
+    setGame({ gameObject, mounted: true });
+  }, []);
 
   useEffect(() => {
-    if (mounted && !gameRef.current.hasChildNodes()) {
-      inject(gameRef.current)
+    if (game.mounted && !gameRef.current.hasChildNodes()) {
+      inject(gameRef.current);
     }
-  }, [mounted])
+  }, [game.mounted]);
 
-  useEffect(() => {
-    console.log(game)
-  }, [game.state.paused])
-
-  if (!mounted) return
+  if (!game.mounted) return;
 
   return (
     <CustomLayout>
@@ -58,7 +55,7 @@ const GameComponent = () => {
         <CardFooter>{deviceType !== 'unknown' ? 'PC' : 'Mobile'}</CardFooter>
       </Card>
     </CustomLayout>
-  )
-}
+  );
+};
 
-export default GameComponent
+export default GameComponent;
