@@ -33,12 +33,17 @@ const Login = () => {
 
   const handleGo = () => {
     setPlayer({ name: playerState.name, image: playerState.image });
+    localStorage.setItem('user', JSON.stringify(playerState));
     navigate('/');
   };
 
   useEffect(() => {
-    console.log(player);
-  }, [player]);
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      const { name, image } = user;
+      setPlayerState({ name, image });
+    }
+  }, []);
 
   const component = isLoading ? (
     <Loading />

@@ -16,7 +16,11 @@ const PlayerForm = ({ playerState, setPlayerState, onClick }) => {
           type="text"
           placeholder="Ingresa tu nickname"
         />
-        <Button type={'submit'} color="primary" onClick={onClick}>
+        <Button
+          type={'submit'}
+          color="primary"
+          onClick={onClick}
+          isDisabled={playerState?.name && playerState?.image ? false : true}>
           Vamos!
         </Button>
       </div>
