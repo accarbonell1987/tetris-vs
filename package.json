@@ -4,11 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "pnpm  --parallel --filter \"./**\" build",
-    "preview": "pnpm  --parallel --filter \"./**\" preview",
     "stop": "kill-port --port 5000,5001",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "web": "cd ./apps/web && pnpm run dev"
+    "web": "cd ./apps/web && npm run dev"
   },
   "workspaces": [
     "./packages/*",

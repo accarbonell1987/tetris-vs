@@ -8,7 +8,7 @@ const PlayerForm = ({ selectedAvatar, onClick }) => {
   return (
     <div className="flex flex-col gap-y-3">
       <label htmlFor="nickname">Como deseas llamarte?:</label>
-      <div className="flex flex-row gap-3 ">
+      <div className="flex gap-3 flex-col items-center md:flex-row">
         <Avatar src={selectedAvatar.image} className="w-16" />
         <Input
           id="nickname"
