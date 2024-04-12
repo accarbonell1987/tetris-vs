@@ -1,7 +1,6 @@
-import React from 'react'
-import { UserTwitterCard } from '../../../components'
+import { UserTwitterCard } from '../../../components';
 
-import { Popover, PopoverTrigger, PopoverContent, User } from '@nextui-org/react'
+import { Popover, PopoverTrigger, PopoverContent, User } from '@nextui-org/react';
 
 const Player = ({ name, description, score, image }) => {
   return (
@@ -13,15 +12,15 @@ const Player = ({ name, description, score, image }) => {
           description={score}
           className="transition-transform"
           avatarProps={{
-            src: image,
+            src: image
           }}
         />
       </PopoverTrigger>
       <PopoverContent className="p-1">
-        <UserTwitterCard name={name} score={score} description={description} />
+        <UserTwitterCard name={name} image={image} score={score} description={description} />
       </PopoverContent>
     </Popover>
-  )
-}
+  );
+};
 
-export default Player
+export default Player;

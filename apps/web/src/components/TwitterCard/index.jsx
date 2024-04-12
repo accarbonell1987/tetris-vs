@@ -1,14 +1,14 @@
-import React from 'react'
-import { Avatar, Button, Card, CardBody, CardFooter, CardHeader } from '@nextui-org/react'
+import React from 'react';
+import { Avatar, Button, Card, CardBody, CardFooter, CardHeader } from '@nextui-org/react';
 
-const UserTwitterCard = ({ name, score, description }) => {
-  const [isFollowed, setIsFollowed] = React.useState(false)
+const UserTwitterCard = ({ name, image, score, description }) => {
+  const [isFollowed, setIsFollowed] = React.useState(false);
 
   return (
     <Card shadow="none" className="max-w-[300px] border-none bg-transparent">
       <CardHeader className="justify-between">
         <div className="flex gap-3">
-          <Avatar isBordered radius="full" size="md" src="https://i.pravatar.cc/150?u=a04258114e29026702d" />
+          <Avatar isBordered radius="full" size="md" src={image} />
           <div className="flex flex-col items-start justify-center">
             <h4 className="text-small font-semibold leading-none text-default-600">{name}</h4>
             <h5 className="text-small tracking-tight text-default-500">{score}</h5>
@@ -20,8 +20,7 @@ const UserTwitterCard = ({ name, score, description }) => {
           radius="full"
           size="sm"
           variant={isFollowed ? 'bordered' : 'solid'}
-          onPress={() => setIsFollowed(!isFollowed)}
-        >
+          onPress={() => setIsFollowed(!isFollowed)}>
           {isFollowed ? 'Unfollow' : 'Follow'}
         </Button>
       </CardHeader>
@@ -44,7 +43,7 @@ const UserTwitterCard = ({ name, score, description }) => {
         </div>
       </CardFooter>
     </Card>
-  )
-}
+  );
+};
 
-export default UserTwitterCard
+export default UserTwitterCard;
