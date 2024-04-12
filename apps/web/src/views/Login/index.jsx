@@ -6,6 +6,7 @@ import { useFetchAvatars } from '../../hooks';
 import { ListOfAvatars, PlayerForm } from './components';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalStorage } from '../../store';
+import { isExpiredDate } from './func/functions';
 
 const Loading = () => {
   return (
@@ -34,14 +35,21 @@ const Login = () => {
   const handleGo = () => {
     setPlayer({ name: playerState.name, image: playerState.image });
     localStorage.setItem('user', JSON.stringify(playerState));
+    localStorage.setItem('saveTime', Date.now());
     navigate('/');
   };
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
+    const saveTime = new Date(parseInt(localStorage.getItem('saveTime')));
     if (user) {
       const { name, image } = user;
-      setPlayerState({ name, image });
+      const isExpiredTime = isExpiredDate(saveTime);
+      if (isExpiredTime) {
+        localStorage.removeItem('user');
+      } else {
+        setPlayerState({ name, image });
+      }
     }
   }, []);
 
