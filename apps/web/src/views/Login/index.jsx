@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Spinner } from '@nextui-org/react';
 import { CustomLayout, CustomCard } from '../../components';
 import { useFetchAvatars } from '../../hooks';
 import { ListOfAvatars, PlayerForm } from './components';
 import { useNavigate } from 'react-router-dom';
+import { useGlobalStorage } from '../../store';
 
 const Loading = () => {
   return (
@@ -23,8 +24,21 @@ const Error = message => {
 };
 
 const Login = () => {
-  const [selectedAvatar, setSelectedAvatar] = useState({ id: null, image: null });
+  const [playerState, setPlayerState] = useState({ id: null, name: '', image: null });
+
   const { data, error, isLoading } = useFetchAvatars();
+  const { player, setPlayer } = useGlobalStorage();
+
+  const navigate = useNavigate();
+
+  const handleGo = () => {
+    setPlayer({ name: playerState.name, image: playerState.image });
+    navigate('/');
+  };
+
+  useEffect(() => {
+    console.log(player);
+  }, [player]);
 
   const component = isLoading ? (
     <Loading />
@@ -35,12 +49,14 @@ const Login = () => {
       header={
         <ListOfAvatars
           data={data}
-          selectedAvatar={selectedAvatar}
-          setSelectedAvatar={setSelectedAvatar}
+          selectedAvatar={playerState}
+          setSelectedAvatar={setPlayerState}
         />
       }
       headDivider={true}
-      body={<PlayerForm selectedAvatar={selectedAvatar} />}
+      body={
+        <PlayerForm playerState={playerState} setPlayerState={setPlayerState} onClick={handleGo} />
+      }
     />
   );
 
