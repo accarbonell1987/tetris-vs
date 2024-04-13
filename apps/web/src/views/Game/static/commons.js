@@ -88,7 +88,7 @@ export const GAME = {
     score: 0,
     maxScore: 0,
     level: 1,
-    paused: true
+    paused: false
   },
   players: {
     player1: null,
