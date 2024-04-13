@@ -1,27 +1,25 @@
 import { MOVEMENTS_CODES } from './static/commons';
-import { Game } from './game';
+import { Game } from './classes/game';
 
-export const inject = (element, props) => {
+const game = new Game();
+
+export const inject = element => {
   if (!element) return;
 
-  Game.inject(element);
-  Game.init(props);
+  game.inject(element);
+  game.init();
 
-  // animate();
+  animate();
 };
 
 const animate = (time = 0) => {
-  const game = Game.getGame();
-
   requestAnimationFrame(animate);
   game.context.clearRect(0, 0, game.canvas.width, game.canvas.height);
 
-  Game.update(time);
+  game.update(time);
 };
 
 document.addEventListener('keydown', event => {
-  const game = Game.getGame();
-
   switch (event.code) {
     case MOVEMENTS_CODES.LEFT_P1:
       game.players.player1.moveLeft(game.board);
@@ -48,7 +46,7 @@ document.addEventListener('keydown', event => {
       game.players.player2.rotate(game.board);
       break;
     case MOVEMENTS_CODES.PAUSE:
-      Game.pauseGame();
+      game.pauseGame();
       break;
 
     default:

@@ -19,7 +19,7 @@ const ListOfAvatars = ({ data, selectedAvatar, setSelectedAvatar }) => {
               isBordered={id === selectedAvatar.id}
               color="primary"
               onClick={() => {
-                setSelectedAvatar({ id, image });
+                setSelectedAvatar({ ...selectedAvatar, id, image });
               }}
             />
           );
