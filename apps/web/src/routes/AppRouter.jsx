@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import { Login, Lobby, Game, Errors } from '../views';
+import PrivateRoute from './PrivateRoute';
 
 // esto se captura del objeto de contexto de players
 const players = {
@@ -27,7 +28,11 @@ const players = {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Lobby />,
+    element: (
+      <PrivateRoute>
+        <Lobby />
+      </PrivateRoute>
+    ),
     errorElement: <Errors />
   },
   {
@@ -37,7 +42,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/game',
-    element: <Game {...players} totalScore={3000} />,
+    element: (
+      <PrivateRoute>
+        <Game {...players} totalScore={3000} />
+      </PrivateRoute>
+    ),
     errorElement: <Errors />
   }
 ]);

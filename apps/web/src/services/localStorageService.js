@@ -1,3 +1,5 @@
+import { isExpiredDate } from '../views/Login/func/functions';
+
 export const StorageService = {
   setItem(key, value) {
     try {
@@ -37,5 +39,10 @@ export const StorageService = {
       console.error('Error clearing localStorage:', error);
       return false;
     }
+  },
+
+  isExpired() {
+    const user = this.getItem('tetris');
+    return isExpiredDate(user?.saveTime);
   }
 };

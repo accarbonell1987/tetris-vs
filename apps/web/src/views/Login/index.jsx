@@ -6,7 +6,6 @@ import { useFetchAvatars } from '../../hooks';
 import { ListOfAvatars, PlayerForm } from './components';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalStorage } from '../../store';
-import { isExpiredDate } from './func/functions';
 import { StorageService } from '../../services/localStorageService';
 
 const Loading = () => {
@@ -51,7 +50,7 @@ const Login = () => {
     if (storageValue?.user) {
       const { name, image } = storageValue.user;
 
-      const isExpiredTime = isExpiredDate(storageValue.saveTime);
+      const isExpiredTime = StorageService.isExpired();
       if (isExpiredTime) StorageService.removeItem('tetris');
       else setPlayerState({ name, image });
     }
