@@ -4,31 +4,31 @@ import {
   ArrowNarrowLeft,
   ArrowNarrowRight,
   Flame,
+  KeyboardHide,
+  KeyboardShow,
   PlayerPause,
   RotateClockwise
 } from 'tabler-icons-react';
 import { PlayerKeysMapEvents, GlobalKeysMapEvents } from '../func/events';
+import { useState } from 'react';
 
 const LeftArrows = () => {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <Button
-        isIconOnly
-        color="warning"
-        variant="solid"
-        onClick={() => PlayerKeysMapEvents.movePieceLeft()}>
-        <ArrowNarrowLeft size={48} strokeWidth={2} color={'black'} />
-      </Button>
-      <Button
-        isIconOnly
-        color="warning"
-        variant="solid"
-        onClick={() => PlayerKeysMapEvents.movePieceRight()}>
-        <ArrowNarrowRight size={48} strokeWidth={2} color={'black'} />
-      </Button>
-      <div className="grid col-span-2 justify-center">
+    <div className="flex gap-2 flex-col">
+      <div className="flex gap-2">
+        <Button color="warning" variant="solid" onClick={() => PlayerKeysMapEvents.movePieceLeft()}>
+          <ArrowNarrowLeft size={48} strokeWidth={2} color={'black'} />
+        </Button>
         <Button
-          isIconOnly
+          color="warning"
+          variant="solid"
+          onClick={() => PlayerKeysMapEvents.movePieceRight()}>
+          <ArrowNarrowRight size={48} strokeWidth={2} color={'black'} />
+        </Button>
+      </div>
+      <div className="flex justify-center">
+        <Button
+          className="w-full"
           color="warning"
           variant="solid"
           onClick={() => PlayerKeysMapEvents.movePieceDown()}>
@@ -41,13 +41,8 @@ const LeftArrows = () => {
 
 const RightButtons = () => {
   return (
-    <div className="grid gap-2">
-      <div className="grid col-start-2">
-        <Button color="danger" variant="solid" onClick={() => PlayerKeysMapEvents.fireBooster()}>
-          <Flame size={48} strokeWidth={2} color={'black'} />
-        </Button>
-      </div>
-      <div className="grid col-start-2">
+    <div>
+      <div>
         <Button
           color="success"
           variant="solid"
@@ -55,26 +50,63 @@ const RightButtons = () => {
           <RotateClockwise size={48} strokeWidth={2} color={'black'} />
         </Button>
       </div>
+      <div>
+        <Button color="danger" variant="solid" onClick={() => PlayerKeysMapEvents.fireBooster()}>
+          <Flame size={48} strokeWidth={2} color={'black'} />
+        </Button>
+      </div>
     </div>
   );
 };
 
-const MiddleButtons = () => {
+const MiddleButtons = ({ isMobile, showKeys, setShowKeys }) => {
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       <Button isIconOnly variant="solid" size="sm" onClick={() => GlobalKeysMapEvents.pauseGame()}>
         <PlayerPause size={18} strokeWidth={2} color={'white'} />
       </Button>
+      {!isMobile ? (
+        <Button
+          isIconOnly
+          color="success"
+          variant="solid"
+          size="sm"
+          onClick={() => {
+            setShowKeys(!showKeys);
+          }}>
+          <KeyboardHide size={22} strokeWidth={2} color={'white'} />
+        </Button>
+      ) : null}
     </div>
   );
 };
 
-const Keys = () => {
-  return (
-    <div className="grid justify-items-center grid-cols-3 gap-4">
+const Keys = ({ show }) => {
+  const isMobile = show;
+
+  const [showKeys, setShowKeys] = useState(show || false);
+
+  const keysComponents = (
+    <div className="flex justify-center gap-2">
       <LeftArrows />
-      <MiddleButtons />
+      <MiddleButtons isMobile={isMobile} showKeys={showKeys} setShowKeys={setShowKeys} />
       <RightButtons />
+    </div>
+  );
+
+  return showKeys ? (
+    keysComponents
+  ) : (
+    <div className="flex justify-center w-full">
+      <Button
+        isIconOnly
+        color="success"
+        variant="solid"
+        onClick={() => {
+          setShowKeys(!showKeys);
+        }}>
+        <KeyboardShow size={22} strokeWidth={2} color={'white'} />
+      </Button>
     </div>
   );
 };

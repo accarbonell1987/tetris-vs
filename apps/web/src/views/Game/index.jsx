@@ -55,7 +55,12 @@ const GameComponent = ({ player1, player2, totalScore }) => {
           <canvas className="z-0" ref={gameRef}></canvas>
         </CardBody>
         <Divider />
-        <CardFooter>{deviceType !== 'unknown' ? 'PC' : <Keys />}</CardFooter>
+        <CardFooter>
+          <Keys show={deviceType !== 'unknown'} />
+        </CardFooter>
+        {/* <CardFooter>
+          <Keys />
+        </CardFooter> */}
       </Card>
     </CustomLayout>
   );
