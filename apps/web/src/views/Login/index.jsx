@@ -36,7 +36,7 @@ const Login = () => {
     setPlayer({ name: playerState.name, image: playerState.image, loggedIn: true });
 
     // Storage in LocalStorage*
-    const storageValue = { user: playerState, saveTime: Date.now() };
+    const storageValue = { user: { ...playerState, loggedIn: true }, saveTime: Date.now() };
     StorageService.setItem('tetris', storageValue);
 
     navigate('/');
