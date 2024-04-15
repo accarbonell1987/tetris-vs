@@ -7,11 +7,11 @@ const PrivateRoute = ({ children }) => {
 
   const { player } = useGlobalStorage();
 
-  const { user } = storageValue;
+  const user = storageValue?.user;
 
   if (player?.rememberMe) return <Navigate to="/" />;
 
-  return player?.loggedIn || user.loggedIn ? children : <Navigate to="/login" />;
+  return player?.loggedIn || user?.loggedIn ? children : <Navigate to="/login" />;
 };
 
 export default PrivateRoute;
