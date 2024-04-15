@@ -1,16 +1,10 @@
 {
   "folders": [
     {
-      "path": "."
+      "path": ".",
     },
-    {
-      "path": "../../canvas"
-    },
-    {
-      "path": "../../vite/tetris"
-    }
   ],
   "settings": {
-    "liveServer.settings.multiRootWorkspaceName": "canvas"
-  }
+    "liveServer.settings.multiRootWorkspaceName": "canvas",
+  },
 }

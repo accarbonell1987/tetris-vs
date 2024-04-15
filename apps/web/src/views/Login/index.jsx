@@ -7,6 +7,7 @@ import { ListOfAvatars, PlayerForm } from './components';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalStorage } from '../../store';
 import { isExpiredDate } from './func/functions';
+import { StorageService } from '../../services/localStorageService';
 
 const Loading = () => {
   return (
@@ -33,23 +34,26 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleGo = () => {
-    setPlayer({ name: playerState.name, image: playerState.image });
-    localStorage.setItem('user', JSON.stringify(playerState));
-    localStorage.setItem('saveTime', Date.now());
+    setPlayer({ name: playerState.name, image: playerState.image, loggedIn: true });
+
+    // Storage in LocalStorage*
+    const storageValue = { user: playerState, saveTime: Date.now() };
+    StorageService.setItem('tetris', storageValue);
+
     navigate('/');
   };
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const saveTime = new Date(parseInt(localStorage.getItem('saveTime')));
-    if (user) {
-      const { name, image } = user;
-      const isExpiredTime = isExpiredDate(saveTime);
-      if (isExpiredTime) {
-        localStorage.removeItem('user');
-      } else {
-        setPlayerState({ name, image });
-      }
+    // Get Data from LocalStorage
+    const storageValue = StorageService.getItem('tetris');
+    if (!storageValue) navigate('/login');
+
+    if (storageValue?.user) {
+      const { name, image } = storageValue.user;
+
+      const isExpiredTime = isExpiredDate(storageValue.saveTime);
+      if (isExpiredTime) StorageService.removeItem('tetris');
+      else setPlayerState({ name, image });
     }
   }, []);
 
