@@ -1,7 +1,10 @@
-import { MOVEMENTS_CODES } from './static/commons';
 import { Game } from './classes/game';
+import { setGame } from './func/events';
 
 const game = new Game();
+
+// Inyectar el objeto games a los eventos
+setGame(game);
 
 export const inject = element => {
   if (!element) return;
@@ -18,38 +21,3 @@ const animate = (time = 0) => {
 
   game.update(time);
 };
-
-document.addEventListener('keydown', event => {
-  switch (event.code) {
-    case MOVEMENTS_CODES.LEFT_P1:
-      game.players.player1.moveLeft(game.board);
-      break;
-    case MOVEMENTS_CODES.LEFT_P2:
-      game.players.player2.moveLeft(game.board);
-      break;
-    case MOVEMENTS_CODES.RIGHT_P1:
-      game.players.player1.moveRight(game.board);
-      break;
-    case MOVEMENTS_CODES.RIGHT_P2:
-      game.players.player2.moveRight(game.board);
-      break;
-    case MOVEMENTS_CODES.DOWN_P1:
-      game.players.player1.moveDown(game.board);
-      break;
-    case MOVEMENTS_CODES.DOWN_P2:
-      game.players.player2.moveDown(game.board);
-      break;
-    case MOVEMENTS_CODES.ROTATE_P1:
-      game.players.player1.rotate(game.board);
-      break;
-    case MOVEMENTS_CODES.ROTATE_P2:
-      game.players.player2.rotate(game.board);
-      break;
-    case MOVEMENTS_CODES.PAUSE:
-      game.pauseGame();
-      break;
-
-    default:
-      break;
-  }
-});
