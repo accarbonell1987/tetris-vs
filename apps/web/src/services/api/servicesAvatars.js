@@ -75,6 +75,6 @@ export const fetchRandomAvatars = async amount => {
 
     return responses;
   } catch (error) {
-    throw Error('Error fetch Randoms Avatars');
+    console.log('Error fetch Randoms Avatars');
   }
 };

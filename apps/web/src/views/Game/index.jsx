@@ -5,6 +5,7 @@ import { Card, CardHeader, CardBody, CardFooter, Divider } from '@nextui-org/rea
 import { Pause, Player } from './components';
 import { useDevice } from '../../hooks';
 import { GAME } from './static/commons.js';
+import Keys from './components/Keys.jsx';
 
 const GameComponent = ({ player1, player2, totalScore }) => {
   const gameRef = useRef(null);
@@ -54,7 +55,7 @@ const GameComponent = ({ player1, player2, totalScore }) => {
           <canvas className="z-0" ref={gameRef}></canvas>
         </CardBody>
         <Divider />
-        <CardFooter>{deviceType !== 'unknown' ? 'PC' : 'Mobile'}</CardFooter>
+        <CardFooter>{deviceType !== 'unknown' ? 'PC' : <Keys />}</CardFooter>
       </Card>
     </CustomLayout>
   );

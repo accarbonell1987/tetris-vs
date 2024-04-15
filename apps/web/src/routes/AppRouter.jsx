@@ -42,11 +42,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/game',
-    element: (
-      <PrivateRoute>
-        <Game {...players} totalScore={3000} />
-      </PrivateRoute>
-    ),
+    element: <Game {...players} totalScore={3000} />,
     errorElement: <Errors />
   }
 ]);
