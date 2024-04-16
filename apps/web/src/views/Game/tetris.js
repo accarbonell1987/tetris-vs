@@ -1,10 +1,10 @@
 import { Game } from './classes/game';
-import { setGame } from './func/events';
+import { setGameToEvents } from './func/events';
 
 const game = new Game();
 
 // Inyectar el objeto games a los eventos
-setGame(game);
+setGameToEvents(game);
 
 export const inject = element => {
   if (!element) return;

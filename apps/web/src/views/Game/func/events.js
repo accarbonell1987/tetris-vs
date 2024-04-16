@@ -2,7 +2,7 @@ import { MOVEMENTS_CODES } from '../static/commons';
 
 let game = null;
 
-export const setGame = instance => (game = instance);
+export const setGameToEvents = instance => (game = instance);
 
 export const PlayerKeysMapEvents = {
   movePieceLeft: () => {
