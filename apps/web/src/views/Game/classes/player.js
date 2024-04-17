@@ -5,7 +5,7 @@ export class Player {
     this.piece = piece;
     this.score = 0;
     this.lines = 0;
-    this.level = 0;
+    this.level = 1;
     this.lose = false;
   }
 

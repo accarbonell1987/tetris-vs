@@ -10,6 +10,7 @@ import { generateRandomPiece } from '../func/piece';
 import { createBoard } from '../func/board';
 import { checkCollisions, solidifyPiece, removeRows, isGameOver } from '../func/game';
 import { Player } from './player';
+import { Containers } from '../func/containers';
 
 export class Game {
   constructor() {
@@ -49,6 +50,8 @@ export class Game {
     this.players.player1.spawn = SPAWN_P1;
     this.players.player2.spawn = SPAWN_P2;
 
+    this.players.player1.level = 2;
+
     this.players.player1.piece.position.x = SPAWN_P1;
     this.players.player2.piece.position.x = SPAWN_P2;
   }
@@ -62,9 +65,11 @@ export class Game {
     this.context.fillStyle = '#000';
     this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.board.update(this.context);
-    this.players.player1.piece.update(this.context);
-    this.players.player2.piece.update(this.context);
+    this.state.currentState.paused ? Containers.pauseGame(this) : Containers.unpauseGame(this);
+
+    // this.board.update(this.context);
+    // this.players.player1.piece.update(this.context);
+    // this.players.player2.piece.update(this.context);
   }
 
   update(time = 0) {

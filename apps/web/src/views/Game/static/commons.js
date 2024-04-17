@@ -56,6 +56,14 @@ export const PIECES = [
   ]
 ];
 
+export const PAUSE = [
+  [1, 1, 0, 0, 1, 1],
+  [1, 1, 0, 0, 1, 1],
+  [1, 1, 0, 0, 1, 1],
+  [1, 1, 0, 0, 1, 1],
+  [1, 1, 0, 0, 1, 1]
+];
+
 export const MOVEMENTS_CODES = {
   LEFT_P1: 'KeyA',
   LEFT_P2: 'ArrowLeft',
