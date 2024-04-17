@@ -11,6 +11,8 @@ import { createBoard } from '../func/board';
 import { checkCollisions, solidifyPiece, removeRows, isGameOver } from '../func/game';
 import { Player } from './player';
 import { Containers } from '../func/containers';
+import { GetRandomNumber } from '../../../utils/random';
+import { loadSprite, randomIntFromRange } from '../func/utils';
 
 export class Game {
   constructor() {
@@ -23,9 +25,14 @@ export class Game {
     };
     this.render = {
       dropCounter: 0,
-      lastTime: 0
+      lastTime: 0,
+      pauseDrawTime: 0,
+      interval: 1000
     };
     this.board = null;
+    this.pause = {
+      images: []
+    };
   }
 
   inject(state) {
@@ -54,22 +61,6 @@ export class Game {
 
     this.players.player1.piece.position.x = SPAWN_P1;
     this.players.player2.piece.position.x = SPAWN_P2;
-  }
-
-  draw() {
-    // const image = createImage(bgSrc, BOARD_WIDTH, BOARD_HEIGHT)
-    // this.context.imageSmoothingEnabled = false
-    // this.context.drawImage(image, 0, 0, 20, 20)
-
-    // Draw a black background
-    this.context.fillStyle = '#000';
-    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.state.currentState.paused ? Containers.pauseGame(this) : Containers.unpauseGame(this);
-
-    // this.board.update(this.context);
-    // this.players.player1.piece.update(this.context);
-    // this.players.player2.piece.update(this.context);
   }
 
   update(time = 0) {
@@ -119,9 +110,27 @@ export class Game {
           removeRows(player2, this.board);
         }
       }
-    }
 
-    this.draw();
+      Containers.drawBackGround(this);
+      Containers.drawBoard(this);
+      Containers.drawGame(this);
+    } else {
+      if (time - this.render.pauseDrawTime >= this.render.interval) {
+        this.pause.images = [];
+
+        for (let index = 0; index < 20; index++) {
+          const randomNumber = randomIntFromRange(2, 10);
+          this.pause.images.push(randomNumber);
+        }
+
+        console.log(this.pause.images);
+        this.render.pauseDrawTime = time;
+      }
+
+      Containers.drawBackGround(this);
+      Containers.drawBoard(this);
+      Containers.drawPause(this);
+    }
   }
 
   pauseGame() {
