@@ -23,9 +23,13 @@ const GameComponent = ({ player1, player2, totalScore }) => {
 
   useEffect(() => {
     if (mounted && !gameRef.current.hasChildNodes()) {
-      inject(gameRef.current, { gameState, setGameState });
+      inject({ gameState, setGameState });
     }
-  }, [mounted, gameState, setGameState]);
+  }, [mounted]);
+
+  useEffect(() => {
+    console.log('1');
+  }, [gameState]);
 
   if (!mounted) return;
 
@@ -50,8 +54,8 @@ const GameComponent = ({ player1, player2, totalScore }) => {
           </div>
         </CardHeader>
         <Divider />
-        <CardBody className="relative">
-          {gameState.paused ? <Pause text={'Pausa'} /> : null}
+        <CardBody className="relative ">
+          {/* {gameState.paused ? <Pause text={'Pausa'} /> : null} */}
           <canvas className="z-0" ref={gameRef}></canvas>
         </CardBody>
         <Divider />

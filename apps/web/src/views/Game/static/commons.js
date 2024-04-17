@@ -85,10 +85,9 @@ export const GAME = {
   canvas: null,
   context: null,
   state: {
-    score: 0,
     maxScore: 0,
     level: 1,
-    paused: false
+    paused: true
   },
   players: {
     player1: null,

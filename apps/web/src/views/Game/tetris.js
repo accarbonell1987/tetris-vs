@@ -6,10 +6,8 @@ const game = new Game();
 // Inyectar el objeto games a los eventos
 setGameToEvents(game);
 
-export const inject = element => {
-  if (!element) return;
-
-  game.inject(element);
+export const inject = state => {
+  game.inject(state);
   game.init();
 
   animate();
