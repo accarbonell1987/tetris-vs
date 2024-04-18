@@ -48,10 +48,10 @@ export class Game {
     //! crear una pieza random
     const piece = generateRandomPiece();
     //! crear el player
-    const player1 = { currentState: new Player(piece, SPAWN_P1) };
+    const player1 = new Player(piece, SPAWN_P1);
 
     this.board = board;
-    this.players.player1 = player1;
+    this.players.player1 = { ...this.players.player1, currentState: player1 };
   }
 
   update(time = 0) {
