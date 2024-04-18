@@ -110,7 +110,6 @@ export class Game {
 
   pauseGame() {
     const paused = !this.state.currentState.paused;
-    console.log('🚀 ~ Game ~ pauseGame ~ paused:', paused);
     !paused ? Music.play() : Music.pause();
 
     this.state.currentState.paused = paused;
