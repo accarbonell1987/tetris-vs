@@ -1,8 +1,8 @@
-import React from 'react';
 import { Avatar, Button, Card, CardBody, CardFooter, CardHeader } from '@nextui-org/react';
+import { Volume, VolumeOff } from 'tabler-icons-react';
 
-const UserTwitterCard = ({ name, image, score, description }) => {
-  const [isFollowed, setIsFollowed] = React.useState(false);
+const UserCard = ({ name, image, score, description, music }) => {
+  const [musicState, changeMusicState] = music;
 
   return (
     <Card shadow="none" className="max-w-[300px] border-none bg-transparent">
@@ -15,13 +15,18 @@ const UserTwitterCard = ({ name, image, score, description }) => {
           </div>
         </div>
         <Button
-          className={isFollowed ? 'bg-transparent text-foreground border-default-200' : ''}
+          className={musicState ? 'bg-transparent text-foreground border-default-200' : ''}
           color="primary"
           radius="full"
           size="sm"
-          variant={isFollowed ? 'bordered' : 'solid'}
-          onPress={() => setIsFollowed(!isFollowed)}>
-          {isFollowed ? 'Unfollow' : 'Follow'}
+          variant={musicState ? 'bordered' : 'solid'}
+          isIconOnly
+          onPress={() => changeMusicState()}>
+          {musicState ? (
+            <VolumeOff size={24} strokeWidth={2} color={'white'} />
+          ) : (
+            <Volume size={24} strokeWidth={2} color={'white'} />
+          )}
         </Button>
       </CardHeader>
       <CardBody className="px-3 py-0">
@@ -46,4 +51,4 @@ const UserTwitterCard = ({ name, image, score, description }) => {
   );
 };
 
-export default UserTwitterCard;
+export default UserCard;
