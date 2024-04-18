@@ -5,6 +5,7 @@ import { checkCollisions, solidifyPiece, removeRows, isGameOver } from '../func/
 import { Player } from './player';
 import { Containers } from '../func/containers';
 import { randomIntFromRange } from '../func/utils';
+import { Music } from '../func/music';
 
 export class Game {
   constructor() {
@@ -39,6 +40,9 @@ export class Game {
     this.canvas.height = BLOCK_SIZE * BOARD_HEIGHT;
 
     this.context.scale(BLOCK_SIZE, BLOCK_SIZE);
+
+    //! Cargar el audio
+    Music.init();
   }
 
   init() {
@@ -106,6 +110,9 @@ export class Game {
 
   pauseGame() {
     const paused = !this.state.currentState.paused;
+    console.log('🚀 ~ Game ~ pauseGame ~ paused:', paused);
+    !paused ? Music.play() : Music.pause();
+
     this.state.currentState.paused = paused;
     this.state.modify({ ...this.state.currentState, paused });
   }
