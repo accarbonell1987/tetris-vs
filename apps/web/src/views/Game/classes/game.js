@@ -100,7 +100,6 @@ export class Game {
       }
 
       Containers.drawBackGround(this);
-      // Containers.drawBoard(this);
       Containers.drawPause(this);
     }
   }
