@@ -6,20 +6,21 @@ export const setGameToEvents = instance => (game = instance);
 
 export const PlayerKeysMapEvents = {
   movePieceLeft: () => {
-    game.players.player1.moveLeft(game.board);
+    game.players.player1.currentState.moveLeft(game.board);
   },
   movePieceRight: () => {
-    game.players.player1.moveRight(game.board);
+    game.players.player1.currentState.moveRight(game.board);
   },
   movePieceDown: () => {
-    game.players.player1.moveDown(game.board);
+    game.players.player1.currentState.moveDown(game.board);
   },
   movePieceRotate: () => {
-    game.players.player1.rotate(game.board);
+    game.players.player1.currentState.rotate(game.board);
   },
   fireBooster: () => {}
 };
 
+//! No usable
 export const EnemyKeysMapEvents = {
   movePieceLeft: () => {
     game.players.player2.moveLeft(game.board);
@@ -47,27 +48,19 @@ document.addEventListener('keydown', event => {
     case MOVEMENTS_CODES.LEFT_P1:
       PlayerKeysMapEvents.movePieceLeft();
       break;
-    case MOVEMENTS_CODES.LEFT_P2:
-      EnemyKeysMapEvents.movePieceLeft();
-      break;
+
     case MOVEMENTS_CODES.RIGHT_P1:
       PlayerKeysMapEvents.movePieceRight();
       break;
-    case MOVEMENTS_CODES.RIGHT_P2:
-      EnemyKeysMapEvents.movePieceRight();
-      break;
+
     case MOVEMENTS_CODES.DOWN_P1:
       PlayerKeysMapEvents.movePieceDown();
       break;
-    case MOVEMENTS_CODES.DOWN_P2:
-      EnemyKeysMapEvents.movePieceDown();
-      break;
+
     case MOVEMENTS_CODES.ROTATE_P1:
       PlayerKeysMapEvents.movePieceRotate();
       break;
-    case MOVEMENTS_CODES.ROTATE_P2:
-      EnemyKeysMapEvents.movePieceRotate();
-      break;
+
     case MOVEMENTS_CODES.PAUSE:
       GlobalKeysMapEvents.pauseGame();
       break;

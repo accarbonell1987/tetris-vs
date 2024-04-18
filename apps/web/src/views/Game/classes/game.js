@@ -1,18 +1,10 @@
-import {
-  BLOCK_SIZE,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  VELOCITY,
-  SPAWN_P1,
-  SPAWN_P2
-} from '../static/commons';
+import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, VELOCITY, SPAWN_P1 } from '../static/commons';
 import { generateRandomPiece } from '../func/piece';
 import { createBoard } from '../func/board';
 import { checkCollisions, solidifyPiece, removeRows, isGameOver } from '../func/game';
 import { Player } from './player';
 import { Containers } from '../func/containers';
-import { GetRandomNumber } from '../../../utils/random';
-import { loadSprite, randomIntFromRange } from '../func/utils';
+import { randomIntFromRange } from '../func/utils';
 
 export class Game {
   constructor() {
@@ -20,8 +12,8 @@ export class Game {
     this.context = null;
     this.state = { currentState: null, modify: () => {} };
     this.players = {
-      player1: null,
-      player2: null
+      player1: { currentState: null, modify: () => {} },
+      player2: { currentState: null, modify: () => {} }
     };
     this.render = {
       dropCounter: 0,
@@ -36,8 +28,9 @@ export class Game {
   }
 
   inject(state) {
-    //! Almacenar la referncia del estado del hook y la funcion para modificar ese estado
+    //! Almacenar la referencia del estado del hook y la funcion para modificar
     this.state = { currentState: state.gameState, modify: state.setGameState };
+    this.players.player1 = { currentState: null, modify: state.setPlayerState };
 
     this.canvas = document.querySelector('canvas');
     this.context = this.canvas.getContext('2d');
@@ -49,18 +42,16 @@ export class Game {
   }
 
   init() {
-    this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
+    //! inicializar el tablero
+    const board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
 
-    this.players.player1 = new Player(generateRandomPiece());
-    this.players.player2 = new Player(generateRandomPiece());
+    //! crear una pieza random
+    const piece = generateRandomPiece();
+    //! crear el player
+    const player1 = { currentState: new Player(piece, SPAWN_P1) };
 
-    this.players.player1.spawn = SPAWN_P1;
-    this.players.player2.spawn = SPAWN_P2;
-
-    this.players.player1.level = 2;
-
-    this.players.player1.piece.position.x = SPAWN_P1;
-    this.players.player2.piece.position.x = SPAWN_P2;
+    this.board = board;
+    this.players.player1 = player1;
   }
 
   update(time = 0) {
@@ -70,15 +61,11 @@ export class Game {
     this.render.dropCounter += deltaTime;
 
     if (!this.state.currentState.paused) {
-      const player1 = this.players.player1;
-      const player2 = this.players.player2;
-
+      const player1 = this.players.player1.currentState;
       const piecePlayer1 = player1.piece;
-      const piecePlayer2 = player2.piece;
 
       if (this.render.dropCounter > VELOCITY[this.state.currentState.level - 1].speed) {
         piecePlayer1.position.y++;
-        piecePlayer2.position.y++;
         this.render.dropCounter = 0;
       }
 
@@ -96,20 +83,6 @@ export class Game {
           removeRows(player1, this.board);
         }
       }
-      if (checkCollisions(piecePlayer2, this.board)) {
-        piecePlayer2.position.y--;
-        solidifyPiece(player2, this.board);
-
-        // Chequear si se acaba el juego
-        if (isGameOver(this.board)) {
-          player2.lose = true;
-          this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
-        } else {
-          player2.piece = generateRandomPiece();
-          player2.piece.position.x = player2.spawn;
-          removeRows(player2, this.board);
-        }
-      }
 
       Containers.drawBackGround(this);
       Containers.drawBoard(this);
@@ -123,12 +96,11 @@ export class Game {
           this.pause.images.push(randomNumber);
         }
 
-        console.log(this.pause.images);
         this.render.pauseDrawTime = time;
       }
 
       Containers.drawBackGround(this);
-      Containers.drawBoard(this);
+      // Containers.drawBoard(this);
       Containers.drawPause(this);
     }
   }

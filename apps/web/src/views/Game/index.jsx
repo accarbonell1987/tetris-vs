@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CustomLayout } from '../../components';
 import { inject } from './tetris.js';
 import { Card, CardHeader, CardBody, CardFooter, Divider } from '@nextui-org/react';
@@ -8,14 +8,14 @@ import { GAME } from './static/commons.js';
 import Keys from './components/Keys.jsx';
 
 const GameComponent = ({ player1, player2, totalScore }) => {
+  const { deviceType } = useDevice();
   const gameRef = useRef(null);
 
   const initialGameState = { ...GAME.state, maxScore: totalScore };
 
   const [gameState, setGameState] = useState(initialGameState);
-
+  const [playerState, setPlayerState] = useState();
   const [mounted, setMounted] = useState(false);
-  const { deviceType } = useDevice();
 
   useEffect(() => {
     setMounted(true);
@@ -23,7 +23,7 @@ const GameComponent = ({ player1, player2, totalScore }) => {
 
   useEffect(() => {
     if (mounted && !gameRef.current.hasChildNodes()) {
-      inject({ gameState, setGameState });
+      inject({ gameState, setGameState, playerState, setPlayerState });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
