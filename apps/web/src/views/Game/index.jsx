@@ -7,7 +7,7 @@ import { useDevice } from '../../hooks';
 import { GAME } from './static/commons.js';
 import Keys from './components/Keys.jsx';
 
-const GameComponentPresentational = ({ gameRef, player1, player2, totalScore, device }) => {
+const GameComponentPresentational = ({ gameRef, player, enemy, totalScore, device }) => {
   return (
     <CustomLayout>
       <div className="flex flex-row gap-5">
@@ -15,16 +15,16 @@ const GameComponentPresentational = ({ gameRef, player1, player2, totalScore, de
           <CardHeader className="flex gap-3 justify-center">
             <div className="flex h-7 justify-evenly items-center space-x-4 text-small">
               <Player
-                name={player1?.name}
-                image={player1?.image}
-                score={`${player1?.score} / ${totalScore}`}
+                name={player?.name}
+                image={player?.image}
+                score={`${player?.score} / ${totalScore}`}
                 description={'CAMARADA'}
               />
               <Divider orientation="vertical" />
               <Player
-                name={player2?.name}
-                image={player2?.image}
-                score={`${player2?.score} / ${totalScore}`}
+                name={enemy?.name}
+                image={enemy?.image}
+                score={`${enemy?.score} / ${totalScore}`}
                 description={'TENIENTE'}
               />
             </div>
@@ -33,11 +33,11 @@ const GameComponentPresentational = ({ gameRef, player1, player2, totalScore, de
           <CardBody className="relative ">
             {/* {gameState.paused ? <Pause text={'Pausa'} /> : null} */}
             <section className="flex justify-evenly items-center space-x-4 text-small">
-              <NextChip player={player1} />
+              <NextChip player={player} />
               <Divider orientation="vertical" />
-              <NextChip player={player2} />
+              <NextChip player={player} />
             </section>
-            <canvas className="z-0 max-w-[288px] max-h-[480px]" ref={gameRef}></canvas>
+            <canvas id="game-canvas" className="z-0 max-w-[288px] max-h-[480px]" ref={gameRef} />
           </CardBody>
           <Divider />
           <CardFooter>
@@ -52,14 +52,15 @@ const GameComponentPresentational = ({ gameRef, player1, player2, totalScore, de
   );
 };
 
-const GameComponent = ({ player1, player2, totalScore }) => {
+const GameComponent = ({ player, enemy, totalScore }) => {
   const { deviceType } = useDevice();
   const gameRef = useRef(null);
 
   const initialGameState = { ...GAME.state, maxScore: totalScore };
 
   const [gameState, setGameState] = useState(initialGameState);
-  const [playerState, setPlayerState] = useState(player1);
+  const [playerState, setPlayerState] = useState({ ...player, id: 1 });
+  const [enemyState, setEnemyState] = useState({ ...enemy, id: 2 });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -78,8 +79,8 @@ const GameComponent = ({ player1, player2, totalScore }) => {
   return (
     <GameComponentPresentational
       gameRef={gameRef}
-      player1={playerState}
-      player2={player2}
+      player={playerState}
+      enemy={enemyState}
       totalScore={totalScore}
       device={deviceType}
     />

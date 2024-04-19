@@ -40,7 +40,7 @@ export class Game {
     this.state = { currentState: state.gameState, modify: state.setGameState };
     this.players.player1 = { currentState: null, modify: state.setPlayerState };
 
-    this.canvas = document.querySelector('canvas');
+    this.canvas = document.getElementById('game-canvas');
     this.context = this.canvas.getContext('2d');
 
     this.canvas.width = BLOCK_SIZE * BOARD_WIDTH;
@@ -61,8 +61,9 @@ export class Game {
 
     //! crear una pieza random
     const piece = generateRandomPiece();
+    const nextPiece = generateRandomPiece();
     //! crear el player
-    const player1 = new Player(piece, SPAWN_P1, { ...this.initialStates.player1 });
+    const player1 = new Player(piece, nextPiece, SPAWN_P1, { ...this.initialStates.player1 });
 
     this.board = board;
     this.players.player1 = { ...this.players.player1, currentState: player1 };
@@ -71,11 +72,13 @@ export class Game {
     this.players.player1.modify({ ...player1 });
   }
 
-  update(time = 0) {
+  update(time = 0, nextChipPlayer1) {
     const deltaTime = time - this.render.lastTime;
 
     this.render.lastTime = time;
     this.render.dropCounter += deltaTime;
+
+    nextChipPlayer1.update(this.players.player1.currentState.nextPiece);
 
     if (!this.state.currentState.paused) {
       const player1 = this.players.player1.currentState;
@@ -96,8 +99,7 @@ export class Game {
           player1.lose = true;
           this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
         } else {
-          player1.piece = generateRandomPiece();
-          player1.piece.position.x = player1.spawn;
+          player1.assignNextPiece();
           removeRows(player1, this.board);
         }
 

@@ -1,8 +1,10 @@
 import { checkCollisions } from '../func/game';
+import { generateRandomPiece } from '../func/piece';
 
 export class Player {
-  constructor(piece, spawn, props) {
+  constructor(piece, nextPiece, spawn, props) {
     this.piece = piece;
+    this.nextPiece = nextPiece;
     this.spawn = spawn;
     this.score = 0;
     this.lines = 0;
@@ -45,5 +47,12 @@ export class Player {
       const rotated = this.piece.rotate();
       if (!checkCollisions(this.piece, board)) this.piece.shape = rotated;
     }
+  }
+
+  assignNextPiece() {
+    this.piece = this.nextPiece;
+    this.piece.position.x = this.spawn;
+
+    this.nextPiece = generateRandomPiece();
   }
 }
