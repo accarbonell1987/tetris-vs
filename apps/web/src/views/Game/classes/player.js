@@ -1,13 +1,16 @@
 import { checkCollisions } from '../func/game';
 
 export class Player {
-  constructor(piece, spawn) {
+  constructor(piece, spawn, props) {
     this.piece = piece;
     this.spawn = spawn;
     this.score = 0;
     this.lines = 0;
     this.level = 1;
     this.lose = false;
+
+    this.name = props.name;
+    this.image = props.image;
 
     this.piece.position.x = spawn;
   }

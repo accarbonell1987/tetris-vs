@@ -26,10 +26,17 @@ export class Game {
     this.pause = {
       images: []
     };
+    this.initialStates = {
+      game: null,
+      player1: null
+    };
   }
 
   inject(state) {
     //! Almacenar la referencia del estado del hook y la funcion para modificar
+    this.initialStates.game = state.gameState;
+    this.initialStates.player1 = state.playerState;
+
     this.state = { currentState: state.gameState, modify: state.setGameState };
     this.players.player1 = { currentState: null, modify: state.setPlayerState };
 
@@ -55,13 +62,13 @@ export class Game {
     //! crear una pieza random
     const piece = generateRandomPiece();
     //! crear el player
-    const player1 = new Player(piece, SPAWN_P1);
+    const player1 = new Player(piece, SPAWN_P1, { ...this.initialStates.player1 });
 
     this.board = board;
     this.players.player1 = { ...this.players.player1, currentState: player1 };
 
     //! actualización del estado React
-    this.players.player1.modify(player1);
+    this.players.player1.modify({ ...player1 });
   }
 
   update(time = 0) {
@@ -82,6 +89,7 @@ export class Game {
       if (checkCollisions(piecePlayer1, this.board)) {
         piecePlayer1.position.y--;
         solidifyPiece(player1, this.board);
+        player1.score += 10;
 
         // Chequear si se acaba el juego
         if (isGameOver(this.board)) {
@@ -94,7 +102,7 @@ export class Game {
         }
 
         //! actualización del estado React
-        this.players.player1.modify(player1);
+        this.players.player1.modify({ ...player1 });
       }
 
       Containers.drawBackGround(this);

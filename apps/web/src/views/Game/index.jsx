@@ -68,16 +68,12 @@ const GameComponent = ({ player1, player2, totalScore }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
-  useEffect(() => {
-    console.log(playerState);
-  }, [playerState]);
-
   if (!mounted) return;
 
   return (
     <GameComponentPresentational
       gameRef={gameRef}
-      player1={player1}
+      player1={playerState}
       player2={player2}
       totalScore={totalScore}
       device={deviceType}
