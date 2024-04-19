@@ -40,12 +40,15 @@ export class Game {
     this.canvas.height = BLOCK_SIZE * BOARD_HEIGHT;
 
     this.context.scale(BLOCK_SIZE, BLOCK_SIZE);
-
-    //! Cargar el audio
-    Music.init();
   }
 
   init() {
+    //! Cargar el audio
+    Music.init();
+
+    //TODO: Eliminar esta linea luego, para que el juego no comienze muteado
+    Music.mute();
+
     //! inicializar el tablero
     const board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
 
@@ -56,6 +59,9 @@ export class Game {
 
     this.board = board;
     this.players.player1 = { ...this.players.player1, currentState: player1 };
+
+    //! actualización del estado React
+    this.players.player1.modify(player1);
   }
 
   update(time = 0) {
@@ -86,6 +92,9 @@ export class Game {
           player1.piece.position.x = player1.spawn;
           removeRows(player1, this.board);
         }
+
+        //! actualización del estado React
+        this.players.player1.modify(player1);
       }
 
       Containers.drawBackGround(this);

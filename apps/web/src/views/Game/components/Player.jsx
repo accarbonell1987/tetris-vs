@@ -5,10 +5,10 @@ import { Popover, PopoverTrigger, PopoverContent, User } from '@nextui-org/react
 import { Music } from '../func/music';
 
 const Player = ({ name, description, score, image }) => {
-  const [musicState, setMusicState] = useState(false);
+  const [musicState, setMusicState] = useState(Music.isMuted);
 
   const changeMusicState = () => {
-    !musicState ? Music.pause() : Music.play();
+    Music.mute();
     setMusicState(!musicState);
   };
 

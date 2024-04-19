@@ -15,14 +15,14 @@ const UserCard = ({ name, image, score, description, music }) => {
           </div>
         </div>
         <Button
-          className={musicState ? 'bg-transparent text-foreground border-default-200' : ''}
+          className={!musicState ? 'bg-transparent text-foreground border-default-200' : ''}
           color="primary"
           radius="full"
           size="sm"
-          variant={musicState ? 'bordered' : 'solid'}
+          variant={!musicState ? 'bordered' : 'solid'}
           isIconOnly
           onPress={() => changeMusicState()}>
-          {musicState ? (
+          {!musicState ? (
             <VolumeOff size={24} strokeWidth={2} color={'white'} />
           ) : (
             <Volume size={24} strokeWidth={2} color={'white'} />

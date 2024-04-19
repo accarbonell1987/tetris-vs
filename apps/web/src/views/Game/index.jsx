@@ -7,29 +7,7 @@ import { useDevice } from '../../hooks';
 import { GAME } from './static/commons.js';
 import Keys from './components/Keys.jsx';
 
-const GameComponent = ({ player1, player2, totalScore }) => {
-  const { deviceType } = useDevice();
-  const gameRef = useRef(null);
-
-  const initialGameState = { ...GAME.state, maxScore: totalScore };
-
-  const [gameState, setGameState] = useState(initialGameState);
-  const [playerState, setPlayerState] = useState();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && !gameRef.current.hasChildNodes()) {
-      inject({ gameState, setGameState, playerState, setPlayerState });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted]);
-
-  if (!mounted) return;
-
+const GameComponentPresentational = ({ gameRef, player1, player2, totalScore, device }) => {
   return (
     <CustomLayout>
       <div className="flex flex-row gap-5">
@@ -58,14 +36,52 @@ const GameComponent = ({ player1, player2, totalScore }) => {
           </CardBody>
           <Divider />
           <CardFooter>
-            <Keys show={deviceType !== 'unknown'} />
+            <Keys show={device !== 'unknown'} />
           </CardFooter>
           {/* <CardFooter>
-          <Keys />
-        </CardFooter> */}
+      <Keys />
+    </CardFooter> */}
         </Card>
       </div>
     </CustomLayout>
+  );
+};
+
+const GameComponent = ({ player1, player2, totalScore }) => {
+  const { deviceType } = useDevice();
+  const gameRef = useRef(null);
+
+  const initialGameState = { ...GAME.state, maxScore: totalScore };
+
+  const [gameState, setGameState] = useState(initialGameState);
+  const [playerState, setPlayerState] = useState(player1);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !gameRef.current.hasChildNodes()) {
+      inject({ gameState, setGameState, playerState, setPlayerState });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted]);
+
+  useEffect(() => {
+    console.log(playerState);
+  }, [playerState]);
+
+  if (!mounted) return;
+
+  return (
+    <GameComponentPresentational
+      gameRef={gameRef}
+      player1={player1}
+      player2={player2}
+      totalScore={totalScore}
+      device={deviceType}
+    />
   );
 };
 

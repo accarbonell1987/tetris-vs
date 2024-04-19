@@ -13,5 +13,9 @@ export const Music = {
   },
   pause: () => {
     music.pause();
-  }
+  },
+  mute: () => {
+    music.muted = !music.muted;
+  },
+  isMuted: () => !!music.muted
 };
