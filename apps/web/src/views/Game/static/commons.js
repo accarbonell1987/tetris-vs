@@ -2,8 +2,8 @@
 export const BLOCK_SIZE = 24;
 
 // Ancho y altura del tablero del juego en número de bloques
-export const BOARD_WIDTH = 12;
-export const BOARD_HEIGHT = 20;
+export const BOARD_WIDTH = 10;
+export const BOARD_HEIGHT = 18;
 
 // Velocidad de caída de las piezas (en milisegundos)
 export const FALL_SPEED = 1000; // 1 segundo

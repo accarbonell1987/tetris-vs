@@ -33,11 +33,7 @@ export const removeRows = (player, board) => {
 
   rowsToRemove.forEach(y => {
     board.matrix.splice(y, 1);
-
     const newRow = Array(BOARD_WIDTH).fill(0);
-    newRow[0] = 1;
-    newRow[BOARD_WIDTH - 1] = 1;
-
     board.matrix.unshift(newRow);
   });
 

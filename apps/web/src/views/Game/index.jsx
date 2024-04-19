@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { CustomLayout } from '../../components';
 import { inject } from './tetris.js';
-import { Card, CardHeader, CardBody, CardFooter, Divider } from '@nextui-org/react';
+import { Card, CardHeader, CardBody, CardFooter, Divider, Chip } from '@nextui-org/react';
 import { NextChip, Player } from './components';
 import { useDevice } from '../../hooks';
 import { GAME } from './static/commons.js';
@@ -11,9 +11,9 @@ const GameComponentPresentational = ({ gameRef, player, enemy, totalScore, devic
   return (
     <CustomLayout>
       <div className="flex flex-row gap-5">
-        <Card className="max-w-[400px]">
+        <Card className="max-w-[360px]">
           <CardHeader className="flex gap-3 justify-center">
-            <div className="flex h-7 justify-evenly items-center space-x-4 text-small">
+            <div className="flex h-7 items- space-x-4 text-small">
               <Player
                 name={player?.name}
                 image={player?.image}
@@ -32,12 +32,14 @@ const GameComponentPresentational = ({ gameRef, player, enemy, totalScore, devic
           <Divider />
           <CardBody className="relative ">
             {/* {gameState.paused ? <Pause text={'Pausa'} /> : null} */}
-            <section className="flex justify-evenly items-center space-x-4 text-small">
+            <section className="flex justify-evenly items-center space-x-4 text-small min-w-[240px] min-h-[72px]">
               <NextChip player={player} />
               <Divider orientation="vertical" />
               <NextChip player={enemy} />
             </section>
-            <canvas id="game-canvas" className="z-0 max-w-[288px] max-h-[480px]" ref={gameRef} />
+            <section className="flex justify-center  rounded-md border-solid border-color: rgb(245, 165, 36)">
+              <canvas id="game-canvas" className="z-0 rounded-md " ref={gameRef} />
+            </section>
           </CardBody>
           <Divider />
           <CardFooter>

@@ -13,7 +13,7 @@ export const Containers = {
       row.forEach((value, x) => {
         if (value !== 0) {
           const image = loadSprite(pause.images[counter++]);
-          context.drawImage(image, x + 3, y + 8, 1, 1);
+          context.drawImage(image, x + 2, y + 7, 1, 1);
         }
       });
     });
