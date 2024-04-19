@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { CustomLayout } from '../../components';
 import { inject } from './tetris.js';
 import { Card, CardHeader, CardBody, CardFooter, Divider } from '@nextui-org/react';
-import { Player } from './components';
+import { NextChip, Player } from './components';
 import { useDevice } from '../../hooks';
 import { GAME } from './static/commons.js';
 import Keys from './components/Keys.jsx';
@@ -32,6 +32,11 @@ const GameComponentPresentational = ({ gameRef, player1, player2, totalScore, de
           <Divider />
           <CardBody className="relative ">
             {/* {gameState.paused ? <Pause text={'Pausa'} /> : null} */}
+            <section className="flex justify-evenly items-center space-x-4 text-small">
+              <NextChip player={player1} />
+              <Divider orientation="vertical" />
+              <NextChip player={player2} />
+            </section>
             <canvas className="z-0 max-w-[288px] max-h-[480px]" ref={gameRef}></canvas>
           </CardBody>
           <Divider />
