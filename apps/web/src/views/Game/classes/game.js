@@ -72,13 +72,15 @@ export class Game {
     this.players.player1.modify({ ...player1 });
   }
 
-  update(time = 0, nextChipPlayer1) {
+  update(time = 0, nextChipPlayer1, nextChipPlayer2) {
     const deltaTime = time - this.render.lastTime;
 
     this.render.lastTime = time;
     this.render.dropCounter += deltaTime;
 
+    //! actualizacion de la ficha siguiente para los jugadores
     nextChipPlayer1.update(this.players.player1.currentState.nextPiece);
+    nextChipPlayer2.update(this.players.player1.currentState.nextPiece);
 
     if (!this.state.currentState.paused) {
       const player1 = this.players.player1.currentState;

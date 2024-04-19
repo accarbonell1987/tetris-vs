@@ -1,7 +1,11 @@
 const NextChipPresentational = ({ player }) => {
   const { id } = player;
 
-  return <canvas id={`nextChipPlayer${id}-canvas`} width={100} height={100} color="black" />;
+  return (
+    <section className="flex justify-center w-1/2 p-4">
+      <canvas id={`nextChipPlayer${id}-canvas`} height={100} />
+    </section>
+  );
 };
 
 const NextChipContainer = ({ player }) => {

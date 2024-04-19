@@ -6,6 +6,7 @@ import PrivateRoute from './PrivateRoute';
 // esto se captura del objeto de contexto de players
 const players = {
   player: {
+    id: 1,
     name: 'Tokisha',
     image: 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
     piece: null,
@@ -15,6 +16,7 @@ const players = {
     lose: false
   },
   enemy: {
+    id: 2,
     name: 'Candy',
     image: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
     piece: null,

@@ -35,7 +35,7 @@ const GameComponentPresentational = ({ gameRef, player, enemy, totalScore, devic
             <section className="flex justify-evenly items-center space-x-4 text-small">
               <NextChip player={player} />
               <Divider orientation="vertical" />
-              <NextChip player={player} />
+              <NextChip player={enemy} />
             </section>
             <canvas id="game-canvas" className="z-0 max-w-[288px] max-h-[480px]" ref={gameRef} />
           </CardBody>
@@ -59,8 +59,8 @@ const GameComponent = ({ player, enemy, totalScore }) => {
   const initialGameState = { ...GAME.state, maxScore: totalScore };
 
   const [gameState, setGameState] = useState(initialGameState);
-  const [playerState, setPlayerState] = useState({ ...player, id: 1 });
-  const [enemyState, setEnemyState] = useState({ ...enemy, id: 2 });
+  const [playerState, setPlayerState] = useState(player);
+  const [enemyState, setEnemyState] = useState(enemy);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ const GameComponent = ({ player, enemy, totalScore }) => {
     <GameComponentPresentational
       gameRef={gameRef}
       player={playerState}
-      enemy={enemyState}
+      enemy={{ ...enemy, piece: playerState.piece, id: 2 }}
       totalScore={totalScore}
       device={deviceType}
     />

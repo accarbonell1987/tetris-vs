@@ -11,6 +11,7 @@ export class Player {
     this.level = 1;
     this.lose = false;
 
+    this.id = props.id;
     this.name = props.name;
     this.image = props.image;
 
