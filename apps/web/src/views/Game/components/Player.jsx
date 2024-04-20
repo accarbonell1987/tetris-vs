@@ -16,10 +16,10 @@ const Player = ({ name, description, score, image }) => {
     <Popover showArrow placement="bottom">
       <PopoverTrigger>
         <User
+          className="transition-transform"
           as="button"
           name={name}
           description={score}
-          className="transition-transform"
           avatarProps={{
             src: image
           }}

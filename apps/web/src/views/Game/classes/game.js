@@ -86,6 +86,7 @@ export class Game {
       const player1 = this.players.player1.currentState;
       const piecePlayer1 = player1.piece;
 
+      //! hacer el efecto que la ficha baje de paso en paso
       if (this.render.dropCounter > VELOCITY[this.state.currentState.level - 1].speed) {
         piecePlayer1.position.y++;
         this.render.dropCounter = 0;
