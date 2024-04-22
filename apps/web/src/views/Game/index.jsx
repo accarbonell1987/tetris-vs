@@ -32,11 +32,16 @@ const GameComponentPresentational = ({ gameRef, player, enemy, totalScore, devic
           <Divider />
           <CardBody className="relative ">
             {/* {gameState.paused ? <Pause text={'Pausa'} /> : null} */}
-            <section className="flex justify-evenly items-center space-x-4 text-small min-w-[240px] min-h-[72px]">
-              <NextChip player={player} />
-              <Divider orientation="vertical" />
-              <NextChip player={enemy} />
-            </section>
+            <div className="flex flex-col items-center gap-2 min-w-[257px]">
+              <Chip color="warning" variant="bordered">
+                Siguiente Ficha
+              </Chip>
+              <section className="flex justify-evenly items-center space-x-4 text-small min-h-[72px]">
+                <NextChip player={player} />
+                <Divider orientation="vertical" />
+                <NextChip player={enemy} />
+              </section>
+            </div>
             <section className="flex justify-center  rounded-md border-solid border-color: rgb(245, 165, 36)">
               <canvas id="game-canvas" className="z-0 rounded-md " ref={gameRef} />
             </section>

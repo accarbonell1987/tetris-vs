@@ -21,12 +21,14 @@ export const inject = state => {
 const animate = (time = 0) => {
   requestAnimationFrame(animate);
   game.context.clearRect(0, 0, game.canvas.width, game.canvas.height);
+
   nextChipPlayer1.context.clearRect(
     0,
     0,
     nextChipPlayer1.canvas.width,
     nextChipPlayer1.canvas.height
   );
+
   nextChipPlayer2.context.clearRect(
     0,
     0,
