@@ -13,20 +13,24 @@ const GameComponentPresentational = ({ gameRef, player, enemy, totalScore, devic
       <div className="flex flex-row gap-5">
         <Card className="max-w-[360px]">
           <CardHeader className="flex gap-3 justify-center">
-            <div className="flex h-7 items- space-x-4 text-small">
-              <Player
-                name={player?.name}
-                image={player?.image}
-                score={`${player?.score} / ${totalScore}`}
-                description={'CAMARADA'}
-              />
+            <div className="flex h-7 space-x-4 text-small w-full">
+              <div className="flex justify-start w-1/2">
+                <Player
+                  name={player?.name}
+                  image={player?.image}
+                  score={`${player?.score} / ${totalScore}`}
+                  description={'CAMARADA'}
+                />
+              </div>
               <Divider orientation="vertical" />
-              <Player
-                name={enemy?.name}
-                image={enemy?.image}
-                score={`${enemy?.score} / ${totalScore}`}
-                description={'TENIENTE'}
-              />
+              <div className="flex justify-start w-1/2">
+                <Player
+                  name={enemy?.name}
+                  image={enemy?.image}
+                  score={`${enemy?.score} / ${totalScore}`}
+                  description={'TENIENTE'}
+                />
+              </div>
             </div>
           </CardHeader>
           <Divider />
