@@ -5,7 +5,6 @@ import PlayerCard from './components/PlayerCard';
 import { CustomLayout } from '../../components';
 
 const Lobby = () => {
-  //Data for mock
   const users = [
     { name: 'User Name 1', avatar: 'https://i.pravatar.cc/300' },
     { name: 'User Name 2', avatar: 'https://i.pravatar.cc/301' },

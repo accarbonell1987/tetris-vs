@@ -51,7 +51,7 @@ export const fetchRandomAvatars = async amount => {
       const code = GetRandomWordFromArrayAndLength(Chars, 4);
       const response = await fetchAvatar(code);
 
-      if (response.status === 200) {
+      if (response?.status === 200) {
         const base64 = ConvertToBase64(response?.data);
         const image = GetImage(base64);
 
