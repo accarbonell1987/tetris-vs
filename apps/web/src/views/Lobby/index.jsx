@@ -5,6 +5,7 @@ import PlayerCard from './components/PlayerCard';
 import { CustomLayout } from '../../components';
 
 const Lobby = () => {
+  //Data for mock
   const users = [
     { name: 'User Name 1', avatar: 'https://i.pravatar.cc/300' },
     { name: 'User Name 2', avatar: 'https://i.pravatar.cc/301' },
@@ -25,12 +26,12 @@ const Lobby = () => {
         variant="bordered"
         style={{ border: '1px solid #f0f0f0' }}>
         <CardHeader>
-          <h1> Lobby</h1>
+          <h1>Lobby</h1>
         </CardHeader>
         <CardBody className="overflow-auto scrollbar-hide max-h-screen">
           <div className="flex flex-col gap-3">
             {users.map((user, index) => (
-              <PlayerCard key={index} name={user.name} avatar={user.avatar} />
+              <PlayerCard key={index} index={index} name={user.name} avatar={user.avatar} />
             ))}
           </div>
         </CardBody>
