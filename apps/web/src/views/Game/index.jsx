@@ -46,8 +46,8 @@ const GameComponentPresentational = ({ gameRef, player, enemy, totalScore, devic
                 <NextChip player={enemy} />
               </section>
             </div>
-            <section className="flex justify-center  rounded-md border-solid border-color: rgb(245, 165, 36)">
-              <canvas id="game-canvas" className="z-0 rounded-md " ref={gameRef} />
+            <section className="flex justify-center rounded-md">
+              <canvas id="game-canvas" className="z-0 rounded-md" ref={gameRef} />
             </section>
           </CardBody>
           <Divider />
