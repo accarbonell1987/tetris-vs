@@ -6,14 +6,14 @@ import { version } from '../package.json';
 import { Console } from './utils/handleConsole';
 import { systemRoutes } from './routes/routesSystem';
 
+//? cargando las variables de entorno
+dotenv.config();
+
 //? cargando puertos de configuracion
 const PORT = process.env.PORT || 3000;
 const SERVER = process.env.SERVER || 'localhost';
 
 const app = express();
-
-//? cargando las variables de entorno
-dotenv.config();
 
 //? configurando express
 app.set('port', PORT);

@@ -1,10 +1,10 @@
 import express from 'express';
-import { healthCheck, systemVersion, getHome } from '../logic/bllSystem';
+import { SystemServices } from '../services/systemServices';
 
 export const systemRoutes = express.Router();
 
-systemRoutes.get('/', getHome);
+systemRoutes.get('/', SystemServices.homeView);
 
-systemRoutes.get('/health', healthCheck);
+systemRoutes.get('/health', SystemServices.healthCheck);
 
-systemRoutes.get('/version', systemVersion);
+systemRoutes.get('/version', SystemServices.systemVersion);
