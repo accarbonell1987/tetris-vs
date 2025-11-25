@@ -80,7 +80,7 @@ const GameComponent = ({ player, enemy, totalScore }) => {
 
   useEffect(() => {
     if (mounted && !gameRef.current.hasChildNodes()) {
-      inject({ gameState, setGameState, playerState, setPlayerState });
+      inject({ gameState, setGameState, playerState, setPlayerState, enemyState, setEnemyState });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);

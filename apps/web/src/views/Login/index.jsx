@@ -7,6 +7,7 @@ import { ListOfAvatars, PlayerForm } from './components';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalStorage } from '../../store';
 import { StorageService } from '../../services/localStorageService';
+import { SocketService } from '../../services/socketService';
 
 const Loading = () => {
   return (
@@ -36,8 +37,13 @@ const Login = () => {
     setPlayer({ name: playerState.name, image: playerState.image, loggedIn: true });
 
     // Storage in LocalStorage*
-    const storageValue = { user: { ...playerState, loggedIn: true }, saveTime: Date.now() };
-    StorageService.setItem('tetris', storageValue);
+    const playerData = { user: { ...playerState, loggedIn: true }, saveTime: Date.now() };
+    StorageService.setItem('tetris', playerData);
+
+    // login into socket
+
+    SocketService.createSocketService();
+    SocketService.login(playerData);
 
     navigate('/');
   };
@@ -54,6 +60,8 @@ const Login = () => {
       if (isExpiredTime) StorageService.removeItem('tetris');
       else setPlayerState({ name, image });
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const component = isLoading ? (

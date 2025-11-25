@@ -1,4 +1,11 @@
-import { BLOCK_SIZE, BOARD_HEIGHT, BOARD_WIDTH, VELOCITY, SPAWN_P1 } from '../static/commons';
+import {
+  BLOCK_SIZE,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  VELOCITY,
+  SPAWN_P1,
+  SPAWN_P2
+} from '../static/commons';
 import { generateRandomPiece } from '../func/piece';
 import { createBoard } from '../func/board';
 import { checkCollisions, solidifyPiece, removeRows, isGameOver } from '../func/game';
@@ -39,6 +46,9 @@ export class Game {
 
     this.state = { currentState: state.gameState, modify: state.setGameState };
     this.players.player1 = { currentState: null, modify: state.setPlayerState };
+    this.players.player2 = { currentState: null, modify: state.setEnemyState };
+
+    this.initialStates.player2 = state.enemyState;
 
     this.canvas = document.getElementById('game-canvas');
     this.context = this.canvas.getContext('2d');
@@ -64,12 +74,17 @@ export class Game {
     const nextPiece = generateRandomPiece();
     //! crear el player
     const player1 = new Player(piece, nextPiece, SPAWN_P1, { ...this.initialStates.player1 });
+    const player2 = new Player(generateRandomPiece(), generateRandomPiece(), SPAWN_P2, {
+      ...this.initialStates.player2
+    });
 
     this.board = board;
     this.players.player1 = { ...this.players.player1, currentState: player1 };
+    this.players.player2 = { ...this.players.player2, currentState: player2 };
 
     //! actualización del estado React
     this.players.player1.modify({ ...player1 });
+    this.players.player2.modify({ ...player2 });
   }
 
   update(time = 0, nextChipPlayer1, nextChipPlayer2) {
@@ -80,15 +95,19 @@ export class Game {
 
     //! actualizacion de la ficha siguiente para los jugadores
     nextChipPlayer1.update(this.players.player1.currentState.nextPiece);
-    nextChipPlayer2.update(this.players.player1.currentState.nextPiece);
+    nextChipPlayer2.update(this.players.player2.currentState.nextPiece);
 
     if (!this.state.currentState.paused) {
       const player1 = this.players.player1.currentState;
       const piecePlayer1 = player1.piece;
 
+      const player2 = this.players.player2.currentState;
+      const piecePlayer2 = player2.piece;
+
       //! hacer el efecto que la ficha baje de paso en paso
       if (this.render.dropCounter > VELOCITY[this.state.currentState.level - 1].speed) {
         piecePlayer1.position.y++;
+        piecePlayer2.position.y++;
         this.render.dropCounter = 0;
       }
 
@@ -108,6 +127,24 @@ export class Game {
 
         //! actualización del estado React
         this.players.player1.modify({ ...player1 });
+      }
+
+      if (checkCollisions(piecePlayer2, this.board)) {
+        piecePlayer2.position.y--;
+        solidifyPiece(player2, this.board);
+        player2.score += 10;
+
+        // Chequear si se acaba el juego
+        if (isGameOver(this.board)) {
+          player2.lose = true;
+          this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
+        } else {
+          player2.assignNextPiece();
+          removeRows(player2, this.board);
+        }
+
+        //! actualización del estado React
+        this.players.player2.modify({ ...player2 });
       }
 
       Containers.drawBackGround(this);

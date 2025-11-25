@@ -17,7 +17,7 @@ export const WALL = [[1]];
 // Piezas
 export const PIECES = [
   // I
-  [[2, 2, 2, 2]],
+  [[3, 2, 3, 2]],
 
   // J
   [

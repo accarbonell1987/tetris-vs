@@ -21,6 +21,9 @@ export const Containers = {
   drawGame: ({ context, players }) => {
     const player1 = players.player1;
     player1.currentState.piece.update(context);
+
+    const player2 = players.player2;
+    player2.currentState.piece.update(context);
   },
   drawBoard: ({ context, board }) => {
     board.update(context);

@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Card, CardHeader, CardBody } from '@nextui-org/react';
 import PlayerCard from './components/PlayerCard';
 import { CustomLayout } from '../../components';
@@ -30,7 +28,7 @@ const Lobby = () => {
         <CardBody className="overflow-auto scrollbar-hide max-h-screen">
           <div className="flex flex-col gap-3">
             {users.map((user, index) => (
-              <PlayerCard key={index} name={user.name} avatar={user.avatar} />
+              <PlayerCard key={`PlayerCard-${index}`} name={user.name} avatar={user.avatar} />
             ))}
           </div>
         </CardBody>

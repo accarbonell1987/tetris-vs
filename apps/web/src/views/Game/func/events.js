@@ -21,18 +21,18 @@ export const PlayerKeysMapEvents = {
 };
 
 //! No usable
-export const EnemyKeysMapEvents = {
+export const Player2KeysMapEvents = {
   movePieceLeft: () => {
-    game.players.player2.moveLeft(game.board);
+    game.players.player2.currentState.moveLeft(game.board);
   },
   movePieceRight: () => {
-    game.players.player2.moveRight(game.board);
+    game.players.player2.currentState.moveRight(game.board);
   },
   movePieceDown: () => {
-    game.players.player2.moveDown(game.board);
+    game.players.player2.currentState.moveDown(game.board);
   },
   movePieceRotate: () => {
-    game.players.player2.rotate(game.board);
+    game.players.player2.currentState.rotate(game.board);
   },
   fireBooster: () => {}
 };
@@ -59,6 +59,22 @@ document.addEventListener('keydown', event => {
 
     case MOVEMENTS_CODES.ROTATE_P1:
       PlayerKeysMapEvents.movePieceRotate();
+      break;
+
+    case MOVEMENTS_CODES.LEFT_P2:
+      Player2KeysMapEvents.movePieceLeft();
+      break;
+
+    case MOVEMENTS_CODES.RIGHT_P2:
+      Player2KeysMapEvents.movePieceRight();
+      break;
+
+    case MOVEMENTS_CODES.DOWN_P2:
+      Player2KeysMapEvents.movePieceDown();
+      break;
+
+    case MOVEMENTS_CODES.ROTATE_P2:
+      Player2KeysMapEvents.movePieceRotate();
       break;
 
     case MOVEMENTS_CODES.PAUSE:
