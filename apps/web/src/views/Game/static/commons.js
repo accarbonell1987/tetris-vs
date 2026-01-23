@@ -1,61 +1,72 @@
+/**
+ * Configuración general y constantes del juego.
+ */
+
 // Tamaño de cada bloque del juego en píxeles
 export const BLOCK_SIZE = 24;
 
-// Ancho y altura del tablero del juego en número de bloques
+// Dimensiones del tablero (en número de bloques)
 export const BOARD_WIDTH = 10;
 export const BOARD_HEIGHT = 18;
 
-// Velocidad de caída de las piezas (en milisegundos)
-export const FALL_SPEED = 1000; // 1 segundo
+// Velocidad de caída inicial
+export const FALL_SPEED = 1000; // 1 segundo por bloque
 
+// Posiciones iniciales de spawn para cada jugador
 export const SPAWN_P1 = 2;
 export const SPAWN_P2 = 6;
 
-// Wall
+// Representación de una sección de pared
 export const WALL = [[1]];
 
-// Piezas
+/**
+ * Definición de las formas de las piezas (Tetriminos).
+ * Los números corresponden a los IDs de los sprites/colores.
+ */
 export const PIECES = [
-  // I
+  // Pieza I
   [[3, 2, 3, 2]],
 
-  // J
+  // Pieza J
   [
     [3, 0, 0],
     [3, 3, 3]
   ],
 
-  // L
+  // Pieza L
   [
     [0, 0, 4],
     [4, 4, 4]
   ],
 
-  // O
+  // Pieza O
   [
     [5, 5],
     [5, 5]
   ],
 
-  // S
+  // Pieza S
   [
     [0, 6, 6],
     [6, 6, 0]
   ],
 
-  // T
+  // Pieza T
   [
     [0, 7, 0],
     [7, 7, 7]
   ],
 
-  // Z
+  // Pieza Z
   [
     [8, 8, 0],
     [0, 8, 8]
   ]
 ];
 
+/**
+ * Matriz de la palabra "PAUSE" representada con bloques para el efecto visual.
+ */
 export const PAUSE = [
   [1, 1, 0, 0, 1, 1],
   [1, 1, 0, 0, 1, 1],
@@ -64,18 +75,29 @@ export const PAUSE = [
   [1, 1, 0, 0, 1, 1]
 ];
 
+/**
+ * Mapeo de códigos de teclas para el control de los jugadores.
+ */
 export const MOVEMENTS_CODES = {
+  // Controles Jugador 1
   LEFT_P1: 'KeyA',
-  LEFT_P2: 'ArrowLeft',
   RIGHT_P1: 'KeyD',
-  RIGHT_P2: 'ArrowRight',
   DOWN_P1: 'KeyS',
-  DOWN_P2: 'ArrowDown',
   ROTATE_P1: 'KeyW',
+
+  // Controles Jugador 2
+  LEFT_P2: 'ArrowLeft',
+  RIGHT_P2: 'ArrowRight',
+  DOWN_P2: 'ArrowDown',
   ROTATE_P2: 'ArrowUp',
+
+  // Controles Globales
   PAUSE: 'Space'
 };
 
+/**
+ * Escalas de velocidad basadas en la puntuación actual.
+ */
 export const VELOCITY = [
   { score: { min: 0, max: 100 }, speed: 1000 },
   { score: { min: 101, max: 200 }, speed: 900 },
@@ -89,6 +111,9 @@ export const VELOCITY = [
   { score: { min: 901, max: Infinity }, speed: 100 }
 ];
 
+/**
+ * Estructura inicial del estado del juego (usada como referencia).
+ */
 export const GAME = {
   canvas: null,
   context: null,

@@ -14,24 +14,27 @@ import { Containers } from '../func/containers';
 import { randomIntFromRange } from '../func/utils';
 import { Music } from '../func/music';
 
+/**
+ * Clase principal que controla el flujo del juego, el renderizado y los estados.
+ */
 export class Game {
   constructor() {
-    this.canvas = null;
-    this.context = null;
-    this.state = { currentState: null, modify: () => {} };
+    this.canvas = null; // Elemento canvas de HTML
+    this.context = null; // Contexto 2D para dibujar
+    this.state = { currentState: null, modify: () => {} }; // Estado global del juego (pausa, nivel, etc.)
     this.players = {
       player1: { currentState: null, modify: () => {} },
       player2: { currentState: null, modify: () => {} }
     };
     this.render = {
-      dropCounter: 0,
-      lastTime: 0,
-      pauseDrawTime: 0,
-      interval: 1000
+      dropCounter: 0, // Acumulador de tiempo para la caída de piezas
+      lastTime: 0, // Último timestamp procesado
+      pauseDrawTime: 0, // Timer para efectos visuales en pausa
+      interval: 1000 // Intervalo base
     };
-    this.board = null;
+    this.board = null; // Instancia del tablero
     this.pause = {
-      images: []
+      images: [] // Imágenes aleatorias para el fondo de pausa
     };
     this.initialStates = {
       game: null,
@@ -39,11 +42,15 @@ export class Game {
     };
   }
 
+  /**
+   * Vincula el juego con los estados de React y el canvas del DOM.
+   * @param {Object} state - Referencias a estados y setters de React.
+   */
   inject(state) {
-    //! Almacenar la referencia del estado del hook y la funcion para modificar
     this.initialStates.game = state.gameState;
     this.initialStates.player1 = state.playerState;
 
+    // Guardamos las funciones de modificación de estado de React
     this.state = { currentState: state.gameState, modify: state.setGameState };
     this.players.player1 = { currentState: null, modify: state.setPlayerState };
     this.players.player2 = { currentState: null, modify: state.setEnemyState };
@@ -53,47 +60,48 @@ export class Game {
     this.canvas = document.getElementById('game-canvas');
     this.context = this.canvas.getContext('2d');
 
+    // Configuración del tamaño del canvas basado en constantes
     this.canvas.width = BLOCK_SIZE * BOARD_WIDTH;
     this.canvas.height = BLOCK_SIZE * BOARD_HEIGHT;
 
+    // Escalamos el contexto para que 1 unidad equivalga a 1 bloque
     this.context.scale(BLOCK_SIZE, BLOCK_SIZE);
   }
 
+  /**
+   * Inicializa los componentes del juego (música, tablero, jugadores).
+   */
   init() {
-    //! Cargar el audio
     Music.init();
+    Music.mute(); // Empieza silenciado por defecto
 
-    //TODO: Eliminar esta linea luego, para que el juego no comienze muteado
-    Music.mute();
+    this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
 
-    //! inicializar el tablero
-    const board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
-
-    //! crear una pieza random
-    const piece = generateRandomPiece();
-    const nextPiece = generateRandomPiece();
-    //! crear el player
-    const player1 = new Player(piece, nextPiece, SPAWN_P1, { ...this.initialStates.player1 });
+    // Creamos jugadores con sus piezas iniciales y siguientes
+    const player1 = new Player(generateRandomPiece(), generateRandomPiece(), SPAWN_P1, {
+      ...this.initialStates.player1
+    });
     const player2 = new Player(generateRandomPiece(), generateRandomPiece(), SPAWN_P2, {
       ...this.initialStates.player2
     });
 
-    this.board = board;
     this.players.player1 = { ...this.players.player1, currentState: player1 };
     this.players.player2 = { ...this.players.player2, currentState: player2 };
 
-    //! actualización del estado React
+    // Sincronizamos con el estado de React
     this.players.player1.modify({ ...player1 });
     this.players.player2.modify({ ...player2 });
   }
 
+  /**
+   * Bucle principal de actualización. Se llama con requestAnimationFrame.
+   */
   update(time = 0, nextChipPlayer1, nextChipPlayer2) {
     const deltaTime = time - this.render.lastTime;
-
     this.render.lastTime = time;
     this.render.dropCounter += deltaTime;
 
-    //! actualizacion de la ficha siguiente para los jugadores
+    // Actualizamos los previews de las siguientes fichas en la UI
     nextChipPlayer1.update(this.players.player1.currentState.nextPiece);
     nextChipPlayer2.update(this.players.player2.currentState.nextPiece);
 
@@ -104,37 +112,35 @@ export class Game {
       const player2 = this.players.player2.currentState;
       const piecePlayer2 = player2.piece;
 
-      //! hacer el efecto que la ficha baje de paso en paso
+      // Lógica de caída automática basada en la velocidad del nivel actual
       if (this.render.dropCounter > VELOCITY[this.state.currentState.level - 1].speed) {
         piecePlayer1.position.y++;
         piecePlayer2.position.y++;
         this.render.dropCounter = 0;
       }
 
-      if (checkCollisions(piecePlayer1, this.board)) {
-        piecePlayer1.position.y--;
-        solidifyPiece(player1, this.board);
+      // --- Procesamiento de colisiones para Jugador 1 ---
+      if (checkCollisions(piecePlayer1, this.board, piecePlayer2)) {
+        piecePlayer1.position.y--; // Revertimos caída
+        solidifyPiece(player1, this.board); // Fijamos la pieza en el tablero
         player1.score += 10;
 
-        // Chequear si se acaba el juego
         if (isGameOver(this.board)) {
           player1.lose = true;
-          this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
+          this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT); // Reset del tablero
         } else {
           player1.assignNextPiece();
-          removeRows(player1, this.board);
+          removeRows(player1, this.board); // Limpiar filas completas
         }
-
-        //! actualización del estado React
         this.players.player1.modify({ ...player1 });
       }
 
-      if (checkCollisions(piecePlayer2, this.board)) {
+      // --- Procesamiento de colisiones para Jugador 2 ---
+      if (checkCollisions(piecePlayer2, this.board, piecePlayer1)) {
         piecePlayer2.position.y--;
         solidifyPiece(player2, this.board);
         player2.score += 10;
 
-        // Chequear si se acaba el juego
         if (isGameOver(this.board)) {
           player2.lose = true;
           this.board = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
@@ -142,31 +148,30 @@ export class Game {
           player2.assignNextPiece();
           removeRows(player2, this.board);
         }
-
-        //! actualización del estado React
         this.players.player2.modify({ ...player2 });
       }
 
+      // Dibujado de todos los elementos
       Containers.drawBackGround(this);
       Containers.drawBoard(this);
       Containers.drawGame(this);
     } else {
+      // Lógica visual cuando el juego está en PAUSA
       if (time - this.render.pauseDrawTime >= this.render.interval) {
         this.pause.images = [];
-
         for (let index = 0; index < 20; index++) {
-          const randomNumber = randomIntFromRange(2, 10);
-          this.pause.images.push(randomNumber);
+          this.pause.images.push(randomIntFromRange(2, 10));
         }
-
         this.render.pauseDrawTime = time;
       }
-
       Containers.drawBackGround(this);
       Containers.drawPause(this);
     }
   }
 
+  /**
+   * Alterna entre pausa y juego activo.
+   */
   pauseGame() {
     const paused = !this.state.currentState.paused;
     !paused ? Music.play() : Music.pause();

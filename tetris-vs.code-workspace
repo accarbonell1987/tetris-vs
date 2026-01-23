@@ -1,10 +1,13 @@
 {
   "folders": [
     {
-      "path": ".",
+      "path": "."
     },
+    {
+      "path": "../../SIGESA/sigesa-login"
+    }
   ],
   "settings": {
-    "liveServer.settings.multiRootWorkspaceName": "canvas",
-  },
+    "liveServer.settings.multiRootWorkspaceName": "canvas"
+  }
 }
