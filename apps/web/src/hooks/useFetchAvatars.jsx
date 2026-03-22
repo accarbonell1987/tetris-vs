@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchRandomAvatars } from '../../services/api/servicesAvatars';
+import { fetchRandomAvatars } from '../services/api/servicesAvatars';
 
 const amountAvatarsToLoad = 8;
 

@@ -29,38 +29,51 @@ const Login = () => {
   const [playerState, setPlayerState] = useState({ id: null, name: '', image: null });
 
   const { data, error, isLoading } = useFetchAvatars();
-  const { player, setPlayer } = useGlobalStorage();
+  const { setPlayer } = useGlobalStorage();
 
   const navigate = useNavigate();
 
   const handleGo = () => {
-    setPlayer({ name: playerState.name, image: playerState.image, loggedIn: true });
+    const id = Math.random().toString(36).substring(2, 9); // simple random id
+    const player = { id, name: playerState.name, image: playerState.image };
+    setPlayer({ ...player, loggedIn: true });
 
-    // Storage in LocalStorage*
-    const playerData = { user: { ...playerState, loggedIn: true }, saveTime: Date.now() };
-    StorageService.setItem('tetris', playerData);
+    // Storage in LocalStorage
+    const storageData = { user: { ...player, loggedIn: true }, saveTime: Date.now() };
+    StorageService.setItem('tetris', storageData);
 
-    // login into socket
-
+    // Create socket connection and join lobby
     SocketService.createSocketService();
-    SocketService.login(playerData);
+    SocketService.login(player);
 
     navigate('/');
   };
 
   useEffect(() => {
-    // Get Data from LocalStorage
     const storageValue = StorageService.getItem('tetris');
-    if (!storageValue) navigate('/login');
-
-    if (storageValue?.user) {
-      const { name, image } = storageValue.user;
-
-      const isExpiredTime = StorageService.isExpired();
-      if (isExpiredTime) StorageService.removeItem('tetris');
-      else setPlayerState({ name, image });
+    if (!storageValue) {
+      // No session, stay on login page
+      return;
     }
 
+    const { user } = storageValue;
+    if (!user) {
+      StorageService.removeItem('tetris');
+      return;
+    }
+
+    const isExpired = StorageService.isExpired();
+    if (isExpired) {
+      StorageService.removeItem('tetris');
+      // stay on login page
+      return;
+    }
+
+    // Valid session: restore player state and navigate to lobby
+    const { id, name, image } = user;
+    setPlayerState({ id: id || Math.random().toString(36).substring(2, 9), name, image });
+    setPlayer({ ...user, loggedIn: true });
+    navigate('/');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

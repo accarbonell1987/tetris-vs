@@ -13,7 +13,7 @@ const LocalStorageProvider = ({ children }) => {
     const isExpiredTime = StorageService.isExpired();
     if (isExpiredTime) StorageService.removeItem('tetris');
     else setPlayer(user);
-  }, []);
+  }, [setPlayer, storageValue]);
 
   return children;
 };

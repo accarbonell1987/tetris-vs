@@ -5,7 +5,7 @@ import style from './span.module.css'
 const CustomSpan = ({ text, actionComponent }) => {
   return (
     <div className={style.divSpan}>
-      <h5 className={style.spanBadge} variant="bordered">
+      <h5 className={style.spanBadge}>
         {`${text}`}
       </h5>
       {actionComponent}

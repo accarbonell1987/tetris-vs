@@ -1,6 +1,7 @@
+import { SESSION_EXPIRY_MS } from '../../../config/constants.js';
+
 export const isExpiredDate = saveTime => {
   if (!saveTime) return true;
 
-  const EXPIRATION_TIME = 24 * 60 * 60 * 1000; // 24 hours
-  return Date.now() - saveTime > EXPIRATION_TIME;
+  return Date.now() - saveTime > SESSION_EXPIRY_MS;
 };

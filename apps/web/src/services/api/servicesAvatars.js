@@ -3,6 +3,7 @@ import axios from 'axios';
 import { GetRandomElementFromList, GetRandomWordFromArrayAndLength } from '../../utils/random';
 import { ConvertToBase64, GetImage } from '../../utils/images';
 import { Chars } from '../../common/constants';
+import { AVATAR_RETRY_LIMIT } from '../../config/constants.js';
 
 import bxon from '../../assets/avatars/bxon.svg';
 import cxml from '../../assets/avatars/cxml.svg';
@@ -42,12 +43,12 @@ export const fetchRandomAvatars = async amount => {
 
     const request = {
       retry: 0,
-      limits: 10
+      limits: AVATAR_RETRY_LIMIT
     };
 
-    // fetch a la api hasta que se alcance el retry
+    // fetch from API until retry limit reached
     let index = 0;
-    while (index < amount && request.retry <= request.limits) {
+    while (index < amount && request.retry < request.limits) {
       const code = GetRandomWordFromArrayAndLength(Chars, 4);
       const response = await fetchAvatar(code);
 
@@ -55,14 +56,15 @@ export const fetchRandomAvatars = async amount => {
         const base64 = ConvertToBase64(response?.data);
         const image = GetImage(base64);
 
-        responses[index++] = image;
+        responses.push(image);
         codes.push(code);
+        index++;
       } else {
         request.retry++;
       }
     }
 
-    // escoger los avatares de la lista estatica
+    // fill remaining slots with static avatars
     while (index < amount) {
       const element = GetRandomElementFromList(avatars);
 

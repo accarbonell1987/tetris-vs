@@ -6,7 +6,7 @@ import http from 'http';
 import { version } from '../package.json';
 import { Console } from './utils/handleConsole';
 import { systemRoutes } from './routes/routesSystem';
-import { createSocketIo, initializeSocket } from './services/socketServices';
+
 import { Lobby } from './services/lobbyServices';
 import { Server } from 'socket.io';
 
@@ -41,15 +41,17 @@ const io = new Server(httpServer, { pingInterval: 2000, pingTimeout: 5000 });
 io.on('connection', socket => {
   Console.log('a user connected');
 
-  io.emit('lobby-update', Lobby.getConnectedPlayers());
+  io.emit('lobby-update', Lobby.getPlayersArray());
 
   socket.on('lobby-join', ({ player }) => {
     Console.log(`lobby-join: ${player.name}`);
     Lobby.addPlayer(player);
+    io.emit('lobby-update', Lobby.getPlayersArray());
   });
   socket.on('lobby-leave', ({ player }) => {
     Console.log(`lobby-leave: ${player.name}`);
     Lobby.removePlayer(player);
+    io.emit('lobby-update', Lobby.getPlayersArray());
   });
 
   socket.on('disconnect', () => {
@@ -59,6 +61,10 @@ io.on('connection', socket => {
 
 app.use(express.static('dist'));
 
-httpServer.listen(PORT, SERVER, () => {
-  Console.log(`API v${version}, Server Started at: ws://${SERVER}:${PORT} ☕`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  httpServer.listen(PORT, SERVER, () => {
+    Console.log(`API v${version}, Server Started at: ws://${SERVER}:${PORT} ☕`);
+  });
+}
+
+export { app, httpServer, io };

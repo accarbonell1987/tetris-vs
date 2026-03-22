@@ -1,3 +1,5 @@
+import { Console } from '../utils/handleConsole.js';
+
 const connectedPlayers = new Map();
 
 export const Lobby = {
@@ -6,7 +8,12 @@ export const Lobby = {
   },
 
   setConnectedPlayers: players => {
-    connectedPlayers.set(players);
+    connectedPlayers.clear();
+    if (players instanceof Map) {
+      players.forEach((player, id) => connectedPlayers.set(id, player));
+    } else {
+      Console.error('setConnectedPlayers expects a Map');
+    }
   },
 
   clearConnectedPlayers: () => {
@@ -14,14 +21,18 @@ export const Lobby = {
   },
 
   addPlayer: player => {
-    connectedPlayers.set(player);
+    connectedPlayers.set(player.id, player);
   },
 
   removePlayer: player => {
-    connectedPlayers.delete(player);
+    connectedPlayers.delete(player.id);
   },
 
   getPlayerById: id => {
     return connectedPlayers.get(id);
+  },
+
+  getPlayersArray: () => {
+    return Array.from(connectedPlayers.values());
   }
 };
