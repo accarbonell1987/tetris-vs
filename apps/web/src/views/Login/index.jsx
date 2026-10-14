@@ -17,10 +17,10 @@ const Loading = () => {
   );
 };
 
-const Error = message => {
+const Error = ({ message }) => {
   return (
     <div className="flex gap-4">
-      <h1>{message}</h1>
+      <h1>{message?.message ?? String(message)}</h1>
     </div>
   );
 };

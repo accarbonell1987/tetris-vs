@@ -96,13 +96,10 @@ describe('fetchRandomAvatars', () => {
     });
   });
 
-  test('handles error in outer try-catch', async () => {
-    vi.mocked(axios.get).mockRejectedValue(new Error('Network error'));
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const avatars = await fetchRandomAvatars(2);
-    // Should log error and return undefined? Actually function returns undefined when catch block runs.
-    expect(avatars).toBeUndefined();
-    expect(consoleSpy).toHaveBeenCalledWith('Error fetch Randoms Avatars');
-    consoleSpy.mockRestore();
+  test('falls back to static avatars when the avatar API is unreachable (no response)', async () => {
+    axios.get.mockRejectedValue(new Error('Network Error'));
+    const result = await fetchRandomAvatars(1);
+    expect(result).toEqual(['bxon.svg']);
+    expect(axios.get).toHaveBeenCalledTimes(10);
   });
 });
