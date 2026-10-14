@@ -1,0 +1,12 @@
+{
+  "name": "@tetris/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Pure, deterministic Tetris engine shared by client and server",
+  "main": "src/engine.js",
+  "exports": "./src/engine.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "ISC"
+}
