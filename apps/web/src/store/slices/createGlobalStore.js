@@ -9,6 +9,13 @@ export const createGlobalStore = set => ({
   removePlayer: playerId => set(state => ({
     players: state.players.filter(p => p.id !== playerId)
   })),
+  // Payload of the last `match-start`; the /match view runs the match from it.
+  match: null,
+  setMatch: match => set({ match }),
+  clearMatch: () => set({ match: null }),
+  // Challenge feedback for the lobby (sent, declined, error).
+  notice: null,
+  setNotice: notice => set({ notice }),
   error: null,
   setError: error => set({ error }),
   clearError: () => set({ error: null })

@@ -1,38 +1,18 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, CardHeader, CardBody } from '@nextui-org/react';
 import PlayerCard from './components/PlayerCard';
 import { CustomLayout } from '../../components';
 import { useGlobalStorage } from '../../store';
-import { SocketService } from '../../services/socketService';
-import { StorageService } from '../../services/localStorageService';
 
 const Lobby = () => {
-  const { player, players, socket, setPlayers } = useGlobalStorage();
+  // Socket messages (lobby list, invites, match-start) are handled app-wide by AppShell.
+  const { player, players, socket, notice, setNotice } = useGlobalStorage();
   const navigate = useNavigate();
 
-  // After a page refresh the session comes from localStorage but the socket is gone: reconnect.
-  useEffect(() => {
-    if (socket) return;
-    const user = player?.loggedIn ? player : StorageService.getItem('tetris')?.user;
-    if (!user) return;
-    SocketService.createSocketService();
-    SocketService.login({ id: user.id, name: user.name, image: user.image });
-  }, [socket, player]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleLobbyUpdate = (players) => {
-      setPlayers(players);
-    };
-
-    socket.on('lobby-update', handleLobbyUpdate);
-
-    return () => {
-      socket.off('lobby-update', handleLobbyUpdate);
-    };
-  }, [socket, setPlayers]);
+  const challenge = target => {
+    socket?.emit('challenge-send', { to: target.id });
+    setNotice(`Desafío enviado a ${target.name}`);
+  };
 
   return (
     <CustomLayout>
@@ -47,9 +27,21 @@ const Lobby = () => {
           </Button>
         </CardHeader>
         <CardBody className="overflow-auto scrollbar-hide max-h-screen">
+          {notice && (
+            <p className="text-small text-warning mb-3" role="status">
+              {notice}
+            </p>
+          )}
           <div className="flex flex-col gap-3">
-            {players.map((player, index) => (
-              <PlayerCard key={`PlayerCard-${player.id || index}`} name={player.name} avatar={player.image} />
+            {players.map((lobbyPlayer, index) => (
+              <PlayerCard
+                key={`PlayerCard-${lobbyPlayer.id || index}`}
+                name={lobbyPlayer.name}
+                avatar={lobbyPlayer.image}
+                status={lobbyPlayer.status}
+                isSelf={lobbyPlayer.id === player?.id}
+                onChallenge={() => challenge(lobbyPlayer)}
+              />
             ))}
           </div>
         </CardBody>

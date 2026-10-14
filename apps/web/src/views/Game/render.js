@@ -1,5 +1,5 @@
 import { BOARD_WIDTH, HIDDEN_ROWS, VISIBLE_ROWS, PIECE_TYPES, getCells, getGhost } from '@tetris/shared';
-import { BLOCK_SIZE, PLAYER_COLORS } from './static/commons';
+import { BLOCK_SIZE, PLAYER_COLORS, GARBAGE_COLOR } from './static/commons';
 
 import wallSrc from '../../assets/images/block-wall.png';
 import blueSrc from '../../assets/images/block-blue.png';
@@ -63,30 +63,39 @@ const drawPanel = (context, player, column) => {
   player.queue.slice(0, 5).forEach((type, slot) => drawPreview(context, type, column, 5 + slot * 3));
 };
 
+const drawBoard = (context, board, column) => {
+  context.fillStyle = '#18181b';
+  context.fillRect(column, 0, BOARD_WIDTH, CANVAS_ROWS);
+  board.slice(HIDDEN_ROWS).forEach((row, y) =>
+    row.forEach((value, x) => {
+      if (value) context.drawImage(SPRITES[value], column + x, y, 1, 1);
+    })
+  );
+};
+
+// Ghost plus falling piece; returns the piece cells.
+const drawActive = (context, game, index, column) => {
+  const { active } = game.players[index];
+  const value = cellValue(active.type);
+  context.globalAlpha = 0.25;
+  drawCells(context, getCells(getGhost(game, index)), value, column, -HIDDEN_ROWS);
+  context.globalAlpha = 1;
+  const cells = getCells(active);
+  drawCells(context, cells, value, column, -HIDDEN_ROWS);
+  return cells;
+};
+
 /** Draws the whole local match on a canvas already scaled to one unit per block. */
 export const drawGame = (context, game) => {
   context.fillStyle = '#000';
   context.fillRect(0, 0, CANVAS_COLUMNS, CANVAS_ROWS);
-  context.fillStyle = '#18181b';
-  context.fillRect(PANEL_COLUMNS, 0, BOARD_WIDTH, CANVAS_ROWS);
-
-  game.board.slice(HIDDEN_ROWS).forEach((row, y) =>
-    row.forEach((value, x) => {
-      if (value) context.drawImage(SPRITES[value], PANEL_COLUMNS + x, y, 1, 1);
-    })
-  );
+  drawBoard(context, game.board, PANEL_COLUMNS);
 
   game.players.forEach((player, index) => {
     drawPanel(context, player, index === 0 ? 0 : PANEL_COLUMNS + BOARD_WIDTH);
     if (!player.active) return;
 
-    const value = cellValue(player.active.type);
-    context.globalAlpha = 0.25;
-    drawCells(context, getCells(getGhost(game, index)), value, PANEL_COLUMNS, -HIDDEN_ROWS);
-    context.globalAlpha = 1;
-
-    const cells = getCells(player.active);
-    drawCells(context, cells, value, PANEL_COLUMNS, -HIDDEN_ROWS);
+    const cells = drawActive(context, game, index, PANEL_COLUMNS);
     // Outline the falling piece in its player's color: both share one board.
     context.strokeStyle = PLAYER_COLORS[index];
     context.lineWidth = 0.08;
@@ -94,4 +103,29 @@ export const drawGame = (context, game) => {
       if (y >= HIDDEN_ROWS) context.strokeRect(PANEL_COLUMNS + x + 0.04, y - HIDDEN_ROWS + 0.04, 0.92, 0.92);
     });
   });
+};
+
+// Online layout: my hold/next panel, my board, my pending garbage meter, a gap, the opponent board.
+const METER_COLUMN = PANEL_COLUMNS + BOARD_WIDTH;
+const OPPONENT_COLUMN = METER_COLUMN + 2;
+export const MATCH_CANVAS_COLUMNS = OPPONENT_COLUMN + BOARD_WIDTH;
+
+/** Draws an online match: my one-player game and the opponent's latest board snapshot. */
+export const drawMatch = (context, game, opponentBoard) => {
+  context.fillStyle = '#000';
+  context.fillRect(0, 0, MATCH_CANVAS_COLUMNS, CANVAS_ROWS);
+  drawBoard(context, game.board, PANEL_COLUMNS);
+  drawPanel(context, game.players[0], 0);
+  if (game.players[0].active) drawActive(context, game, 0, PANEL_COLUMNS);
+
+  const pending = game.players[0].pendingGarbage.reduce((total, { lines }) => total + lines, 0);
+  const height = Math.min(pending, CANVAS_ROWS);
+  context.fillStyle = GARBAGE_COLOR;
+  context.fillRect(METER_COLUMN + 0.2, CANVAS_ROWS - height, 0.6, height);
+
+  drawBoard(context, opponentBoard, OPPONENT_COLUMN);
+  // The board color matches the dark card behind the canvas edge: outline it so it reads as a board.
+  context.strokeStyle = '#3f3f46';
+  context.lineWidth = 0.08;
+  context.strokeRect(OPPONENT_COLUMN + 0.04, 0.04, BOARD_WIDTH - 0.08, CANVAS_ROWS - 0.08);
 };

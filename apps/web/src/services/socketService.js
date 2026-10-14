@@ -74,6 +74,11 @@ export const SocketService = {
         return;
       }
       socket.emit('lobby-join', { player });
+      // Socket.IO reconnects on its own after a network drop, but the server has forgotten
+      // this socket by then: join the lobby again (one handler per socket, even if login repeats).
+      socket.io?.off('reconnect', socket.rejoinLobby);
+      socket.rejoinLobby = () => socket.emit('lobby-join', { player });
+      socket.io?.on('reconnect', socket.rejoinLobby);
     } catch (error) {
       console.error('Socket login error:', error);
       useGlobalStore.getState().setError({

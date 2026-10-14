@@ -81,6 +81,19 @@ describe('Lobby service', () => {
     });
   });
 
+  describe('setStatus', () => {
+    test('updates the status of a player in the lobby', () => {
+      Lobby.addPlayer({ id: '1', name: 'Alice', status: 'idle' });
+      Lobby.setStatus('1', 'playing');
+      expect(Lobby.getPlayerById('1').status).toBe('playing');
+    });
+
+    test('does nothing for a player not in the lobby', () => {
+      expect(() => Lobby.setStatus('missing', 'playing')).not.toThrow();
+      expect(Lobby.getPlayerById('missing')).toBeUndefined();
+    });
+  });
+
   describe('clearConnectedPlayers', () => {
     test('removes all players', () => {
       Lobby.addPlayer({ id: '1', name: 'Alice' });

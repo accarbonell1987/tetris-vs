@@ -60,4 +60,21 @@ describe('SocketService login method', () => {
     }));
     expect(mockSocket.emit).not.toHaveBeenCalled();
   });
+
+  test('joins the lobby again after Socket.IO reconnects on its own', () => {
+    const managerHandlers = {};
+    mockSocket.io = {
+      on: vi.fn((event, handler) => {
+        managerHandlers[event] = handler;
+      }),
+      off: vi.fn()
+    };
+    mockStore.socket = mockSocket;
+    SocketService.login({ id: 'player-123', name: 'Alice' });
+    managerHandlers.reconnect();
+    expect(mockSocket.emit).toHaveBeenCalledTimes(2);
+    expect(mockSocket.emit).toHaveBeenLastCalledWith('lobby-join', {
+      player: { id: 'player-123', name: 'Alice' }
+    });
+  });
 });

@@ -31,3 +31,12 @@ export const CONTROLS_LEGEND = [
   'J2: ←/→ mover · ↓ bajar · ↑// girar · Enter soltar · Shift der. guardar',
   'Esc o P: pausa'
 ];
+
+// Pending garbage meter next to the online board (NextUI danger).
+export const GARBAGE_COLOR = '#f31260';
+
+// Online: one player per keyboard, so both key sets drive the same board (A4). No pause.
+export const ONLINE_CONTROLS_LEGEND = [
+  'A/D o ←/→ mover · S o ↓ bajar · W/↑ o Q// girar',
+  'Espacio o Enter soltar · Shift guardar'
+];
