@@ -13,6 +13,9 @@ export const buildSnapshot = game => {
   return board;
 };
 
+// How long the round result stays up before the next countdown.
+export const ROUND_RESULT_MS = 2000;
+
 export const isCurrentRound = (state, message) => message.round === state.round;
 
 /** Match state from the `match-start` payload. Phases: countdown → playing → lost → roundOver → ... → over. */
@@ -25,11 +28,28 @@ export const createMatchState = ({ matchId, players, round, seed, wins, countdow
   countdownMs,
   phase: 'countdown',
   roundWinner: null,
+  nextRound: null,
+  resultShown: false,
   winner: null,
   reason: null
 });
 
-/** Server messages (`round-end`, `round-start`, `match-end`) plus local `countdown-done` and `topout`. */
+const startRound = (state, { round, seed, wins, countdownMs }) => ({
+  ...state,
+  round,
+  seed,
+  wins,
+  countdownMs,
+  phase: 'countdown',
+  roundWinner: null,
+  nextRound: null,
+  resultShown: false
+});
+
+/**
+ * Server messages (`round-end`, `round-start`, `match-end`) plus local `countdown-done`, `topout`
+ * and `result-shown` (the round result was on screen for ROUND_RESULT_MS).
+ */
 export const matchReducer = (state, { type, payload }) => {
   if (state.phase === 'over') return state;
   switch (type) {
@@ -42,15 +62,12 @@ export const matchReducer = (state, { type, payload }) => {
       return { ...state, phase: 'roundOver', roundWinner: payload.winner, wins: payload.wins };
     case 'round-start':
       if (payload.round <= state.round) return state;
-      return {
-        ...state,
-        round: payload.round,
-        seed: payload.seed,
-        wins: payload.wins,
-        countdownMs: payload.countdownMs,
-        phase: 'countdown',
-        roundWinner: null
-      };
+      // The server sends round-start right after round-end: keep the result up until it was shown.
+      if (state.phase === 'roundOver' && !state.resultShown) return { ...state, nextRound: payload };
+      return startRound(state, payload);
+    case 'result-shown':
+      if (state.phase !== 'roundOver') return state;
+      return state.nextRound ? startRound(state, state.nextRound) : { ...state, resultShown: true };
     case 'match-end':
       return { ...state, phase: 'over', winner: payload.winner, wins: payload.wins, reason: payload.reason };
     default:

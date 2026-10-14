@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { Login, Lobby, Game, Match, Errors } from '../views';
 import PrivateRoute from './PrivateRoute';
+import AppShell from './AppShell';
 
 // esto se captura del objeto de contexto de players
 const players = {
@@ -27,33 +28,39 @@ const players = {
   }
 };
 
+// AppShell wraps every screen: invites and match-start are handled wherever the player is.
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: (
-      <PrivateRoute>
-        <Lobby />
-      </PrivateRoute>
-    ),
-    errorElement: <Errors />
-  },
-  {
-    path: '/login',
-    element: <Login />,
-    errorElement: <Errors />
-  },
-  {
-    path: '/game',
-    element: <Game {...players} totalScore={3000} />,
-    errorElement: <Errors />
-  },
-  {
-    path: '/match',
-    element: (
-      <PrivateRoute>
-        <Match />
-      </PrivateRoute>
-    ),
-    errorElement: <Errors />
+    element: <AppShell />,
+    children: [
+      {
+        path: '/',
+        element: (
+          <PrivateRoute>
+            <Lobby />
+          </PrivateRoute>
+        ),
+        errorElement: <Errors />
+      },
+      {
+        path: '/login',
+        element: <Login />,
+        errorElement: <Errors />
+      },
+      {
+        path: '/game',
+        element: <Game {...players} totalScore={3000} />,
+        errorElement: <Errors />
+      },
+      {
+        path: '/match',
+        element: (
+          <PrivateRoute>
+            <Match />
+          </PrivateRoute>
+        ),
+        errorElement: <Errors />
+      }
+    ]
   }
 ]);

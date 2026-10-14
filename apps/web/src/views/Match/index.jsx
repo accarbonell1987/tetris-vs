@@ -8,7 +8,7 @@ import Pause from '../Game/components/Pause';
 import { createInput, press, release, update } from '../Game/input';
 import { drawMatch, MATCH_CANVAS_COLUMNS, CANVAS_ROWS } from '../Game/render';
 import { BLOCK_SIZE, KEY_BINDINGS, ONLINE_CONTROLS_LEGEND } from '../Game/static/commons';
-import { buildSnapshot, createMatchState, matchReducer } from './logic';
+import { buildSnapshot, createMatchState, matchReducer, ROUND_RESULT_MS } from './logic';
 
 // A long frame (e.g. after switching tabs) must not drop pieces several rows at once.
 const MAX_FRAME_MS = 100;
@@ -37,7 +37,7 @@ const overlayFor = (match, me, count) => {
  * referees rounds. The engine state lives inside one effect per round; React renders the HUD.
  */
 const OnlineMatch = ({ started }) => {
-  const { socket, player, setPlayers, clearMatch } = useGlobalStorage();
+  const { socket, player, clearMatch } = useGlobalStorage();
   const navigate = useNavigate();
   const canvasRef = useRef(null);
   const phaseRef = useRef(null);
@@ -51,18 +51,24 @@ const OnlineMatch = ({ started }) => {
     phaseRef.current = phase;
   }, [phase]);
 
-  // Referee messages (S4). The lobby view is unmounted here, so keep its player list fresh too.
+  // Referee messages (S4).
   useEffect(() => {
     if (!socket) return;
     const handlers = {
-      'lobby-update': setPlayers,
       'round-end': payload => dispatch({ type: 'round-end', payload }),
       'round-start': payload => dispatch({ type: 'round-start', payload }),
       'match-end': payload => dispatch({ type: 'match-end', payload })
     };
     Object.entries(handlers).forEach(([event, handler]) => socket.on(event, handler));
     return () => Object.entries(handlers).forEach(([event, handler]) => socket.off(event, handler));
-  }, [socket, setPlayers]);
+  }, [socket]);
+
+  // The round result stays up for ROUND_RESULT_MS before the next countdown.
+  useEffect(() => {
+    if (phase !== 'roundOver') return;
+    const timer = setTimeout(() => dispatch({ type: 'result-shown' }), ROUND_RESULT_MS);
+    return () => clearTimeout(timer);
+  }, [phase]);
 
   // 3-2-1 before every round.
   useEffect(() => {
@@ -229,10 +235,13 @@ const OnlineMatch = ({ started }) => {
   );
 };
 
-/** /match: without a match in the store (e.g. after a refresh) there is nothing to play. */
+/**
+ * /match: without a match in the store (e.g. after a refresh) there is nothing to play.
+ * A new match-start while on /match (rematch from the result screen) remounts with fresh state.
+ */
 const Match = () => {
   const { match } = useGlobalStorage();
-  return match ? <OnlineMatch started={match} /> : <Navigate to="/" replace />;
+  return match ? <OnlineMatch key={match.matchId} started={match} /> : <Navigate to="/" replace />;
 };
 
 export default Match;

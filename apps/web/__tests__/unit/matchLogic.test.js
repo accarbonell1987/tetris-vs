@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { createGame, getCells, PIECE_TYPES, HIDDEN_ROWS, VISIBLE_ROWS } from '@tetris/shared';
-import { buildSnapshot, createMatchState, matchReducer, isCurrentRound } from '../../src/views/Match/logic.js';
+import { buildSnapshot, createMatchState, matchReducer, isCurrentRound, ROUND_RESULT_MS } from '../../src/views/Match/logic.js';
 
 const start = {
   matchId: 'm1',
@@ -74,14 +74,25 @@ describe('match state (S4)', () => {
     expect(isCurrentRound(state, { round: 2 })).toBe(false);
   });
 
-  test('round-start resets to a new countdown with the new seed', () => {
-    let state = matchReducer(createMatchState(start), { type: 'topout' });
-    state = matchReducer(state, { type: 'round-end', payload: { round: 1, winner: 'b', wins: { a: 0, b: 1 } } });
-    state = matchReducer(state, {
-      type: 'round-start',
-      payload: { round: 2, seed: 99, wins: { a: 0, b: 1 }, countdownMs: 3000 }
-    });
+  const nextRound = { round: 2, seed: 99, wins: { a: 0, b: 1 }, countdownMs: 3000 };
+  const roundOver = () => {
+    const state = matchReducer(createMatchState(start), { type: 'topout' });
+    return matchReducer(state, { type: 'round-end', payload: { round: 1, winner: 'b', wins: { a: 0, b: 1 } } });
+  };
+
+  test('the round result stays up until shown, then round-start resets to a new countdown', () => {
+    let state = matchReducer(roundOver(), { type: 'round-start', payload: nextRound });
+    expect(state).toMatchObject({ round: 1, phase: 'roundOver', roundWinner: 'b' });
+    state = matchReducer(state, { type: 'result-shown' });
     expect(state).toMatchObject({ round: 2, seed: 99, wins: { a: 0, b: 1 }, phase: 'countdown', roundWinner: null });
+    expect(ROUND_RESULT_MS).toBe(2000);
+  });
+
+  test('a round-start after the result was shown starts the countdown at once', () => {
+    let state = matchReducer(roundOver(), { type: 'result-shown' });
+    expect(state).toMatchObject({ round: 1, phase: 'roundOver' });
+    state = matchReducer(state, { type: 'round-start', payload: nextRound });
+    expect(state).toMatchObject({ round: 2, seed: 99, phase: 'countdown', roundWinner: null });
   });
 
   test('match-end finishes the match with the winner and the reason', () => {

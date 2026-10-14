@@ -13,6 +13,9 @@ export const createGlobalStore = set => ({
   match: null,
   setMatch: match => set({ match }),
   clearMatch: () => set({ match: null }),
+  // Challenge feedback for the lobby (sent, declined, error).
+  notice: null,
+  setNotice: notice => set({ notice }),
   error: null,
   setError: error => set({ error }),
   clearError: () => set({ error: null })
