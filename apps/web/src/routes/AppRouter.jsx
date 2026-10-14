@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import { Login, Lobby, Game, Errors } from '../views';
+import { Login, Lobby, Game, Match, Errors } from '../views';
 import PrivateRoute from './PrivateRoute';
 
 // esto se captura del objeto de contexto de players
@@ -45,6 +45,15 @@ export const router = createBrowserRouter([
   {
     path: '/game',
     element: <Game {...players} totalScore={3000} />,
+    errorElement: <Errors />
+  },
+  {
+    path: '/match',
+    element: (
+      <PrivateRoute>
+        <Match />
+      </PrivateRoute>
+    ),
     errorElement: <Errors />
   }
 ]);

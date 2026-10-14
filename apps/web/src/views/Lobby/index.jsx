@@ -1,15 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, CardHeader, CardBody } from '@nextui-org/react';
 import PlayerCard from './components/PlayerCard';
+import ChallengeModal from './components/ChallengeModal';
 import { CustomLayout } from '../../components';
 import { useGlobalStorage } from '../../store';
 import { SocketService } from '../../services/socketService';
 import { StorageService } from '../../services/localStorageService';
 
 const Lobby = () => {
-  const { player, players, socket, setPlayers } = useGlobalStorage();
+  const { player, players, socket, setPlayers, setMatch } = useGlobalStorage();
   const navigate = useNavigate();
+  const [challenger, setChallenger] = useState(null);
+  const [notice, setNotice] = useState(null);
 
   // After a page refresh the session comes from localStorage but the socket is gone: reconnect.
   useEffect(() => {
@@ -23,16 +26,33 @@ const Lobby = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleLobbyUpdate = (players) => {
-      setPlayers(players);
+    const handlers = {
+      'lobby-update': setPlayers,
+      'challenge-received': ({ from }) => setChallenger(from),
+      'challenge-declined': ({ by }) => setNotice(`${by.name} rechazó tu desafío`),
+      'challenge-error': ({ message }) => setNotice(message),
+      'match-start': match => {
+        setChallenger(null);
+        setMatch(match);
+        navigate('/match');
+      }
     };
-
-    socket.on('lobby-update', handleLobbyUpdate);
+    Object.entries(handlers).forEach(([event, handler]) => socket.on(event, handler));
 
     return () => {
-      socket.off('lobby-update', handleLobbyUpdate);
+      Object.entries(handlers).forEach(([event, handler]) => socket.off(event, handler));
     };
-  }, [socket, setPlayers]);
+  }, [socket, setPlayers, setMatch, navigate]);
+
+  const challenge = target => {
+    socket?.emit('challenge-send', { to: target.id });
+    setNotice(`Desafío enviado a ${target.name}`);
+  };
+
+  const answer = accepted => {
+    socket?.emit(accepted ? 'challenge-accept' : 'challenge-decline', { from: challenger.id });
+    setChallenger(null);
+  };
 
   return (
     <CustomLayout>
@@ -47,13 +67,26 @@ const Lobby = () => {
           </Button>
         </CardHeader>
         <CardBody className="overflow-auto scrollbar-hide max-h-screen">
+          {notice && (
+            <p className="text-small text-warning mb-3" role="status">
+              {notice}
+            </p>
+          )}
           <div className="flex flex-col gap-3">
-            {players.map((player, index) => (
-              <PlayerCard key={`PlayerCard-${player.id || index}`} name={player.name} avatar={player.image} />
+            {players.map((lobbyPlayer, index) => (
+              <PlayerCard
+                key={`PlayerCard-${lobbyPlayer.id || index}`}
+                name={lobbyPlayer.name}
+                avatar={lobbyPlayer.image}
+                status={lobbyPlayer.status}
+                isSelf={lobbyPlayer.id === player?.id}
+                onChallenge={() => challenge(lobbyPlayer)}
+              />
             ))}
           </div>
         </CardBody>
       </Card>
+      <ChallengeModal challenger={challenger} onAccept={() => answer(true)} onDecline={() => answer(false)} />
     </CustomLayout>
   );
 };
