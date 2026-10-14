@@ -84,6 +84,14 @@ describe('Match service', () => {
       expect(Match.takeChallenge('a', 'c')).toBe(false);
     });
 
+    test('a new challenge to the same target replaces and returns the open ones', () => {
+      expect(Match.sendChallenge('a', 'b')).toEqual([]);
+      expect(Match.sendChallenge('a', 'b')).toEqual([]);
+      expect(Match.sendChallenge('c', 'b')).toEqual(['a']);
+      expect(Match.takeChallenge('a', 'b')).toBe(false);
+      expect(Match.takeChallenge('c', 'b')).toBe(true);
+    });
+
     test('dropping a player removes challenges sent by and to them', () => {
       Match.sendChallenge('a', 'b');
       Match.sendChallenge('c', 'a');

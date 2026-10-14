@@ -55,11 +55,12 @@ const isBoard = board =>
     row => Array.isArray(row) && row.length <= 10 && row.every(cell => Number.isInteger(cell) && cell >= 0 && cell <= 8)
   );
 
+// challenge-error messages are shown as is in the UI, whose copy is Spanish.
 const challengeError = (fromId, target) => {
-  if (!isIdle(fromId)) return 'You must be idle in the lobby to challenge';
-  if (!target) return 'Player not found';
-  if (target.id === fromId) return 'You cannot challenge yourself';
-  if (target.status !== 'idle') return 'Player is busy';
+  if (!isIdle(fromId)) return 'Debes estar libre en el lobby para desafiar';
+  if (!target) return 'Jugador no encontrado';
+  if (target.id === fromId) return 'No puedes desafiarte a ti mismo';
+  if (target.status !== 'idle') return 'El jugador está ocupado';
   return null;
 };
 
@@ -121,7 +122,9 @@ io.on('connection', socket => {
     Lobby.addPlayer({ ...publicPlayer(player), status });
     broadcastLobby();
   });
-  socket.on('lobby-leave', ({ player }) => {
+  socket.on('lobby-leave', message => {
+    const player = message?.player;
+    if (!player?.id) return;
     Console.log(`lobby-leave: ${player.name}`);
     Lobby.removePlayer(player);
     io.emit('lobby-update', Lobby.getPlayersArray());
@@ -132,7 +135,9 @@ io.on('connection', socket => {
     const target = Lobby.getPlayerById(message?.to);
     const error = challengeError(fromId, target);
     if (error) return socket.emit('challenge-error', { message: error });
-    Match.sendChallenge(fromId, target.id);
+    Match.sendChallenge(fromId, target.id).forEach(replacedId =>
+      io.to(playerRoom(replacedId)).emit('challenge-error', { message: `${target.name} recibió otro desafío` })
+    );
     io.to(playerRoom(target.id)).emit('challenge-received', { from: publicPlayer(Lobby.getPlayerById(fromId)) });
   });
 
@@ -140,7 +145,7 @@ io.on('connection', socket => {
     const fromId = message?.from;
     const toId = socket.data.playerId;
     if (!isIdle(fromId) || !isIdle(toId) || !Match.takeChallenge(fromId, toId)) {
-      return socket.emit('challenge-error', { message: 'The challenge is no longer available' });
+      return socket.emit('challenge-error', { message: 'El desafío ya no está disponible' });
     }
     startMatch(fromId, toId);
   });

@@ -65,8 +65,14 @@ export const Match = {
     return { winner: Match.opponentOf(match, playerId), wins: { ...match.wins } };
   },
 
+  // The target answers one invite at a time: returns the challengers whose open invite was replaced.
   sendChallenge: (fromId, toId) => {
+    const replaced = Array.from(pendingChallenges)
+      .filter(([otherId, targetId]) => targetId === toId && otherId !== fromId)
+      .map(([otherId]) => otherId);
+    replaced.forEach(otherId => pendingChallenges.delete(otherId));
     pendingChallenges.set(fromId, toId);
+    return replaced;
   },
 
   // Consumes the challenge; true when it was pending.

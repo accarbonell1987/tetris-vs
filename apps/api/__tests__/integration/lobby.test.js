@@ -60,15 +60,18 @@ describe('Lobby join/leave flow', () => {
     clientSocket = ioClient(`http://localhost:${serverPort}`);
     await new Promise((resolve) => clientSocket.on('connect', resolve));
 
-    // First join a player
+    // First join a player; the connection itself also broadcasts, so wait for the update listing them
     const player = { id: 'player-456', name: 'Bob' };
-    clientSocket.emit('lobby-join', { player });
-
-    // Wait for first update (optional)
-    const firstUpdate = new Promise((resolve) => {
-      clientSocket.once('lobby-update', resolve);
+    const joined = new Promise((resolve) => {
+      const handler = (players) => {
+        if (!players.some((entry) => entry.id === player.id)) return;
+        clientSocket.off('lobby-update', handler);
+        resolve();
+      };
+      clientSocket.on('lobby-update', handler);
     });
-    await firstUpdate;
+    clientSocket.emit('lobby-join', { player });
+    await joined;
 
     // Now leave
     const updatePromise = new Promise((resolve) => {
@@ -81,6 +84,22 @@ describe('Lobby join/leave flow', () => {
     const players = await updatePromise;
     // Expect empty array after leave
     expect(players).toHaveLength(0);
+  });
+
+  test('lobby-leave without a player is ignored and the server keeps serving', async () => {
+    clientSocket = ioClient(`http://localhost:${serverPort}`);
+    await new Promise((resolve) => clientSocket.on('connect', resolve));
+    clientSocket.emit('lobby-leave');
+    clientSocket.emit('lobby-leave', null);
+    clientSocket.emit('lobby-leave', {});
+    const player = { id: 'player-after-leave', name: 'Dana' };
+    const update = new Promise((resolve) => {
+      clientSocket.on('lobby-update', (players) => {
+        if (players.some((entry) => entry.id === player.id)) resolve(players);
+      });
+    });
+    clientSocket.emit('lobby-join', { player });
+    expect(await update).toEqual([{ ...player, status: 'idle' }]);
   });
 
   test('multiple players join and lobby-update contains all', async () => {
