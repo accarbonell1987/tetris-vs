@@ -32,8 +32,8 @@ Assumptions (marked, not user requirements):
 
 - [x] T1 S1 S2 S3 S5 S6 S7 S8 — scaffold, pieces/SRS, bag, movement, hold, ghost, queue — inline — 22b0ef0 (11/11 tests GREEN after observed RED: module missing)
 - [x] T2 S4 S8 — gravity, lock delay, line clear, top-out, levels — inline — 91c6242 (18/18 GREEN after observed RED: missing LOCK_DELAY export)
-- [ ] T3 S9 S10 S11 S12 — T-spin, combo, B2B, garbage queue/cancel/delay — inline
-- [ ] T4 S13 S14 — shared board players, score race, target win — inline
+- [x] T3 S9 S10 S11 S12 — T-spin, combo, B2B, garbage queue/cancel/delay — inline — 84b7d59 (26/26 GREEN after observed RED: missing GARBAGE_DELAY export)
+- [x] T4 S13 S14 — shared board players, score race, target win — inline — 80d7937 (33/33 GREEN after observed RED: 5 failing)
 
 Route: all inline (no Writer trigger: units share `engine.js`, so no disjoint parallel surfaces).
 
@@ -42,3 +42,4 @@ Route: all inline (no Writer trigger: units share `engine.js`, so no disjoint pa
 - L1 (2026-10-14) User: "dale, arrancá con el motor puro"
 - L2 Decisions from this session (Engram decision/*): online separate boards + local shared board; Guideline attack; KO best of 3 (network layer, step 3); local score race to 3000.
 - L3 Forecast ~1000 authored lines (engine + tests) > 400: delivery chain strategy will be asked once before opening a PR. RDD is off (global), no native review.
+- L4 (2026-10-14) T1-T4 done: 33/33 tests via npm test in packages/shared. Fixed during T4: kicked rotations now also reset the lock counter on a new lowest row. Next: step 2 (local mode on the engine + bug fixes). Chain strategy still to ask before opening a PR.
