@@ -8,6 +8,12 @@ export const HIDDEN_ROWS = 2; // spawn buffer above the visible field
 export const NEXT_COUNT = 5;
 export const LOCK_DELAY = 500;
 export const MAX_LOCK_RESETS = 15;
+export const GARBAGE_DELAY = 500;
+export const GARBAGE_CELL = 8;
+
+const LINE_ATTACK = { none: [0, 0, 1, 2, 4], mini: [0, 0, 1], full: [0, 2, 4, 6] };
+const COMBO_BONUS = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5]; // Tetris 99 table, indexed by combo count
+const T_CORNERS = [[0, 0], [2, 0], [2, 2], [0, 2]]; // clockwise from top-left of the T's 3x3 box
 
 // mulberry32: randomness lives in plain state, so the same seed replays the same game.
 const random = seed => {
@@ -36,10 +42,10 @@ export const getCells = piece =>
     row.flatMap((value, x) => (value ? [[piece.x + x, piece.y + y]] : []))
   );
 
-const hitsBoard = (game, piece) =>
-  getCells(piece).some(
-    ([x, y]) => x < 0 || x >= game.board[0].length || y < 0 || y >= game.board.length || game.board[y][x] !== 0
-  );
+const isBlocked = (game, x, y) =>
+  x < 0 || x >= BOARD_WIDTH || y < 0 || y >= game.board.length || game.board[y][x] !== 0;
+
+const hitsBoard = (game, piece) => getCells(piece).some(([x, y]) => isBlocked(game, x, y));
 
 const hitsOtherPieces = (game, piece, index) => {
   const occupied = new Set(getCells(piece).map(cell => cell.join()));
@@ -109,9 +115,56 @@ const clearLines = game => {
   return cleared;
 };
 
+// 3-corner rule: full T-spin when both front corners are filled or the last SRS kick was needed.
+const detectTSpin = (game, player) => {
+  const { active, lastKick } = player;
+  if (active.type !== 'T' || lastKick === -1) return 'none';
+  const filled = T_CORNERS.map(([x, y]) => isBlocked(game, active.x + x, active.y + y));
+  if (filled.filter(Boolean).length < 3) return 'none';
+  const frontFilled = filled[active.rotation] && filled[(active.rotation + 1) % 4];
+  return frontFilled || lastKick === 4 ? 'full' : 'mini';
+};
+
+const computeAttack = (player, lines, tSpin) => {
+  const difficult = lines === 4 || tSpin !== 'none';
+  const backToBack = difficult && player.backToBack;
+  player.backToBack = difficult;
+  player.combo++;
+  const attack =
+    LINE_ATTACK[tSpin][lines] + (backToBack ? 1 : 0) + COMBO_BONUS[Math.min(player.combo, COMBO_BONUS.length - 1)];
+
+  // The attack cancels pending garbage (oldest first); only the rest is sent.
+  let sent = attack;
+  while (sent > 0 && player.pendingGarbage.length) {
+    const oldest = player.pendingGarbage[0];
+    const cancelled = Math.min(sent, oldest.lines);
+    oldest.lines -= cancelled;
+    sent -= cancelled;
+    if (!oldest.lines) player.pendingGarbage.shift();
+  }
+  return { tSpin, combo: player.combo, backToBack, attack, sent };
+};
+
+// Raises garbage that waited GARBAGE_DELAY. Returns false when it pushes blocks above the ceiling.
+const raiseGarbage = (game, index) => {
+  const player = game.players[index];
+  const ready = player.pendingGarbage.filter(entry => entry.timer >= GARBAGE_DELAY);
+  player.pendingGarbage = player.pendingGarbage.filter(entry => entry.timer < GARBAGE_DELAY);
+  for (const { lines, hole } of ready) {
+    const pushedOut = game.board.slice(0, lines);
+    const rows = Array.from({ length: lines }, () =>
+      Array.from({ length: BOARD_WIDTH }, (_, x) => (x === hole ? 0 : GARBAGE_CELL))
+    );
+    game.board = [...game.board.slice(lines), ...rows];
+    if (pushedOut.some(row => row.some(cell => cell !== 0))) return false;
+  }
+  return true;
+};
+
 const lockPiece = (game, index, events) => {
   const player = game.players[index];
   const cells = getCells(player.active);
+  const tSpin = detectTSpin(game, player);
   const value = PIECE_TYPES.indexOf(player.active.type) + 1;
   cells.forEach(([x, y]) => {
     game.board[y][x] = value;
@@ -122,9 +175,11 @@ const lockPiece = (game, index, events) => {
   const lines = clearLines(game);
   if (lines) {
     player.lines += lines;
-    events.push({ type: 'clear', player: index, lines });
-  } else if (cells.every(([, y]) => y < HIDDEN_ROWS)) {
-    return topOut(game, index, events); // lock out
+    events.push({ type: 'clear', player: index, lines, ...computeAttack(player, lines, tSpin) });
+  } else {
+    player.combo = -1;
+    if (cells.every(([, y]) => y < HIDDEN_ROWS)) return topOut(game, index, events); // lock out
+    if (!raiseGarbage(game, index)) return topOut(game, index, events);
   }
   spawnNext(game, index, events);
 };
@@ -145,13 +200,17 @@ const createPlayer = (seed, spawnX) => ({
   holdUsed: false,
   queue: [],
   bagSeed: seed,
+  garbageSeed: seed ^ 0x5bd1e995, // separate stream so garbage holes never shift the piece sequence
   spawnX,
   lastKick: -1,
   lockTimer: 0,
   lockResets: 0,
   lowestY: 0,
   gravityTimer: 0,
-  lines: 0
+  lines: 0,
+  combo: -1,
+  backToBack: false,
+  pendingGarbage: []
 });
 
 /**
@@ -238,7 +297,11 @@ export const tick = (game, deltaMs) => {
   const next = structuredClone(game);
   const events = [];
   next.players.forEach((player, index) => {
-    if (next.over || !player.active) return;
+    if (next.over) return;
+    player.pendingGarbage.forEach(entry => {
+      entry.timer += deltaMs;
+    });
+    if (!player.active) return;
     applyGravity(next, index, deltaMs);
     applyLockDelay(next, index, deltaMs, events);
   });
@@ -250,4 +313,16 @@ export const getGhost = (game, index) => {
   const piece = { ...game.players[index].active };
   while (!hitsBoard(game, { ...piece, y: piece.y + 1 })) piece.y++;
   return piece;
+};
+
+/** Queues an opponent's attack. It rises after GARBAGE_DELAY, on this player's next non-clearing lock. */
+export const receiveGarbage = (game, index, lines) => {
+  const next = structuredClone(game);
+  const player = next.players[index];
+  if (lines > 0) {
+    const roll = random(player.garbageSeed);
+    player.garbageSeed = roll.seed;
+    player.pendingGarbage.push({ lines, hole: Math.floor(roll.value * BOARD_WIDTH), timer: 0 });
+  }
+  return { game: next, events: [] };
 };

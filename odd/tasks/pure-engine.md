@@ -23,15 +23,15 @@ Branch: `feat/pure-engine` (from `front-web`). Delivery: ask-on-risk; chain stra
 Assumptions (marked, not user requirements):
 - A1 DAS 170 ms / ARR 50 ms belong to the input layer (step 2), not the engine; the engine moves one cell per action.
 - A2 Garbage model (S12): incoming garbage waits 500 ms, then rises when the receiver locks a piece that clears no lines (TETR.IO style). One hole column per incoming attack.
-- A3 T-spin detection: 3-corner rule; mini unless both front corners are filled or the last SRS kick was used. T-spin full 1/2/3 → 2/4/6, mini → 0/1. Combo bonus table [0,0,1,1,2,2,3,3,4,4,4,5].
+- A3 T-spin detection: 3-corner rule; mini unless both front corners are filled or the last SRS kick was used. T-spin full 1/2/3 → 2/4/6, mini → 0/1. Combo bonus table (Tetris 99) [0,1,1,2,2,3,3,4,4,4,5], so the second consecutive clear already adds +1 ("limpiar en turnos seguidos suma").
 - A4 Shared board: another player's falling piece blocks movement but is not ground, so nothing locks mid-air on it (fixes current bug). Spawn blocked only by another falling piece waits instead of topping out.
 - A5 Gravity: Guideline curve (0.8 − (level−1)·0.007)^(level−1) s/row, level = floor(lines/10)+1, capped at 20.
 - A6 Lock delay counter resets when the piece reaches a new lowest row; after 15 resets a grounded piece locks immediately.
 
 ## Tasks
 
-- [x] T1 S1 S2 S3 S5 S6 S7 S8 — scaffold, pieces/SRS, bag, movement, hold, ghost, queue — inline
-- [ ] T2 S4 S8 — gravity, lock delay, line clear, top-out, levels — inline
+- [x] T1 S1 S2 S3 S5 S6 S7 S8 — scaffold, pieces/SRS, bag, movement, hold, ghost, queue — inline — 22b0ef0 (11/11 tests GREEN after observed RED: module missing)
+- [x] T2 S4 S8 — gravity, lock delay, line clear, top-out, levels — inline — 91c6242 (18/18 GREEN after observed RED: missing LOCK_DELAY export)
 - [ ] T3 S9 S10 S11 S12 — T-spin, combo, B2B, garbage queue/cancel/delay — inline
 - [ ] T4 S13 S14 — shared board players, score race, target win — inline
 
