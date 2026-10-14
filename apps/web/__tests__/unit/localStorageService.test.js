@@ -18,7 +18,7 @@ describe('StorageService', () => {
       removeItem: vi.fn(),
       clear: vi.fn(),
     };
-    global.localStorage = localStorageMock;
+    globalThis.localStorage = localStorageMock;
   });
 
   describe('getItem', () => {

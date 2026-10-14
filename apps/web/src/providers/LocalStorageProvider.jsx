@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useGlobalStorage } from '../store';
 import { StorageService } from '../services/localStorageService';
 

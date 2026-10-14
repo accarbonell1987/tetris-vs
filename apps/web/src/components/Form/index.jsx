@@ -1,5 +1,3 @@
-import React from 'react'
-
 import { CustomCard } from '..'
 
 import style from './form.module.css'

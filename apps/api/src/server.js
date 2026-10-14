@@ -33,10 +33,6 @@ app.use(systemRoutes);
 //? socket
 const httpServer = http.createServer(app);
 
-//? injection of http server
-// const io = createSocketIo({ httpServer });
-// initializeSocket({ io });
-
 // Same policy as the Express cors() above: the dev client runs on another origin (Vite, LAN IPs).
 const io = new Server(httpServer, { pingInterval: 2000, pingTimeout: 5000, cors: { origin: true } });
 

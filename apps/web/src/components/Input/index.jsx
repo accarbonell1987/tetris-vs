@@ -1,8 +1,8 @@
-import React from 'react'
-
 import InputDefault from './components/Input'
 import InputPassword from './components/Password'
 
+// handleChange is taken out of props on purpose so it is not forwarded to the DOM input.
+// eslint-disable-next-line no-unused-vars
 const CustomInput = ({ type, handleChange, ...props }) => {
   // const [inputData, setInputData] = useState({ color: '' })
 
