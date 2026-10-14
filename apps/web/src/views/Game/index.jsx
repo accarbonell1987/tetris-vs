@@ -150,15 +150,17 @@ const GameComponent = ({ player, enemy, totalScore }) => {
     };
 
     const onKeyDown = event => {
+      // Leave browser/OS shortcuts (Cmd+D, Ctrl+S...) alone.
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (PAUSE_KEYS.includes(event.code)) {
         claim(event);
-        controlsRef.current.togglePause();
+        if (!event.repeat) controlsRef.current.togglePause();
         return;
       }
       const binding = KEY_BINDINGS[event.code];
-      if (!binding) return;
+      // While paused or finished, Space/Enter must still activate the overlay buttons.
+      if (!binding || !playing()) return;
       claim(event);
-      if (!playing()) return;
       press(inputs[binding.player], binding.action).forEach(action =>
         apply(act(game, binding.player, action))
       );
@@ -167,8 +169,9 @@ const GameComponent = ({ player, enemy, totalScore }) => {
     const onKeyUp = event => {
       const binding = KEY_BINDINGS[event.code];
       if (!binding) return;
-      claim(event);
       release(inputs[binding.player], binding.action);
+      // Buttons fire on key-up: let them have it while paused or finished.
+      if (playing()) claim(event);
     };
 
     // Key-up events are lost while the window is unfocused: forget every held key.
