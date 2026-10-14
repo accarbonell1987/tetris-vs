@@ -6,6 +6,8 @@ const urlSocketServer = import.meta.env.VITE_API_SERVER;
 export const SocketService = {
   createSocketService: () => {
     try {
+      const existing = useGlobalStore.getState().socket;
+      if (existing) return existing; // one connection per tab, even if callers race
       const socket = io(urlSocketServer || 'http://localhost:3000');
       useGlobalStore.getState().setSocket(socket);
       return socket;

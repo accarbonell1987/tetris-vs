@@ -36,7 +36,8 @@ const httpServer = http.createServer(app);
 // const io = createSocketIo({ httpServer });
 // initializeSocket({ io });
 
-const io = new Server(httpServer, { pingInterval: 2000, pingTimeout: 5000 });
+// Same policy as the Express cors() above: the dev client runs on another origin (Vite, LAN IPs).
+const io = new Server(httpServer, { pingInterval: 2000, pingTimeout: 5000, cors: { origin: true } });
 
 io.on('connection', socket => {
   Console.log('a user connected');
