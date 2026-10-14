@@ -124,4 +124,8 @@ export const drawMatch = (context, game, opponentBoard) => {
   context.fillRect(METER_COLUMN + 0.2, CANVAS_ROWS - height, 0.6, height);
 
   drawBoard(context, opponentBoard, OPPONENT_COLUMN);
+  // The board color matches the dark card behind the canvas edge: outline it so it reads as a board.
+  context.strokeStyle = '#3f3f46';
+  context.lineWidth = 0.08;
+  context.strokeRect(OPPONENT_COLUMN + 0.04, 0.04, BOARD_WIDTH - 0.08, CANVAS_ROWS - 0.08);
 };
