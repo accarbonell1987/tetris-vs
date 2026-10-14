@@ -116,7 +116,9 @@ io.on('connection', socket => {
     Console.log(`lobby-join: ${player.name}`);
     socket.data.playerId = player.id;
     socket.join(playerRoom(player.id));
-    Lobby.addPlayer({ ...publicPlayer(player), status: 'idle' });
+    // A second tab (or a refresh) of a player in a match must not mark them idle.
+    const status = Match.findByPlayer(player.id) ? 'playing' : 'idle';
+    Lobby.addPlayer({ ...publicPlayer(player), status });
     broadcastLobby();
   });
   socket.on('lobby-leave', ({ player }) => {

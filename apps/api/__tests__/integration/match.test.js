@@ -84,6 +84,19 @@ describe('Online match flow', () => {
     });
   });
 
+  test('a second socket joining for a playing player keeps them playing', async () => {
+    const { alice } = await startMatch();
+    const secondTab = ioClient(serverURL, { forceNew: true });
+    sockets.push(secondTab);
+    await waitFor(secondTab, 'connect');
+    const update = waitFor(secondTab, 'lobby-update', players =>
+      players.some(entry => entry.id === alice.player.id)
+    );
+    secondTab.emit('lobby-join', { player: alice.player });
+    const players = await update;
+    expect(players.find(entry => entry.id === alice.player.id).status).toBe('playing');
+  });
+
   test('challenge-send delivers challenge-received to the target only', async () => {
     const alice = await join('alice');
     const bob = await join('bob');
