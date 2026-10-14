@@ -13,7 +13,6 @@ describe('Lobby join/leave flow', () => {
       httpServer.listen(0, 'localhost', resolve);
     });
     serverPort = httpServer.address().port;
-    console.log(`Test server listening on port ${serverPort}`);
   });
 
   afterAll(() => {
