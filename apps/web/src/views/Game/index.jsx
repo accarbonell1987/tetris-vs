@@ -1,116 +1,221 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Button, Card, CardHeader, CardBody, CardFooter, Divider } from '@nextui-org/react';
+import { createGame, act, tick } from '@tetris/shared';
 import { CustomLayout } from '../../components';
-import { inject } from './tetris.js';
-import { Card, CardHeader, CardBody, CardFooter, Divider, Chip } from '@nextui-org/react';
-import { NextChip, Player } from './components';
 import { useDevice } from '../../hooks';
-import { GAME } from './static/commons.js';
-import Keys from './components/Keys.jsx';
+import { Player, Pause, Keys } from './components';
+import { createInput, press, release, update } from './input';
+import { drawGame, CANVAS_COLUMNS, CANVAS_ROWS } from './render';
+import { Music } from './func/music';
+import { BLOCK_SIZE, KEY_BINDINGS, PAUSE_KEYS, CONTROLS_LEGEND } from './static/commons';
+
+// A long frame (e.g. after switching tabs) must not drop pieces several rows at once.
+const MAX_FRAME_MS = 100;
+
+const initialHud = { scores: [0, 0], paused: true, winner: null };
 
 /**
- * Componente Presentacional del Juego.
- * Define la estructura visual de la pantalla de Tetris.
+ * Presentational component: header with both players, the canvas and the controls.
  */
-const GameComponentPresentational = ({ gameRef, player, enemy, totalScore, device }) => {
+const GameComponentPresentational = ({
+  canvasRef,
+  player,
+  enemy,
+  hud,
+  totalScore,
+  device,
+  onAction,
+  onPause,
+  onRematch
+}) => {
+  const winnerName = hud.winner === null ? null : [player, enemy][hud.winner]?.name;
+
   return (
     <CustomLayout>
-      <div className="flex flex-row gap-5">
-        <Card className="max-w-[360px]">
-          {/* Cabecera del Juego: Información de los dos jugadores */}
-          <CardHeader className="flex gap-3 justify-center">
-            <div className="flex h-7 space-x-4 text-small w-full">
-              <div className="flex justify-start w-1/2">
-                <Player
-                  name={player?.name}
-                  image={player?.image}
-                  score={`${player?.score} / ${totalScore}`}
-                  description={'CAMARADA'}
-                />
-              </div>
-              <Divider orientation="vertical" />
-              <div className="flex justify-start w-1/2">
-                <Player
-                  name={enemy?.name}
-                  image={enemy?.image}
-                  score={`${enemy?.score} / ${totalScore}`}
-                  description={'TENIENTE'}
-                />
-              </div>
+      <Card className="max-w-full">
+        <CardHeader className="flex gap-3 justify-center">
+          <div className="flex h-7 space-x-4 text-small w-full">
+            <div className="flex justify-start w-1/2">
+              <Player
+                name={player?.name}
+                image={player?.image}
+                score={`${hud.scores[0]} / ${totalScore}`}
+                description={'CAMARADA'}
+              />
             </div>
-          </CardHeader>
-          <Divider />
-
-          <CardBody className="relative ">
-            {/* Sección de "Siguiente Ficha" para ambos jugadores */}
-            <div className="flex flex-col items-center gap-2 min-w-[257px]">
-              <Chip color="warning" variant="bordered">
-                Siguiente Ficha
-              </Chip>
-              <section className="flex justify-evenly items-center space-x-4 text-small min-h-[72px]">
-                <NextChip player={player} />
-                <Divider orientation="vertical" />
-                <NextChip player={enemy} />
-              </section>
+            <Divider orientation="vertical" />
+            <div className="flex justify-end w-1/2">
+              <Player
+                name={enemy?.name}
+                image={enemy?.image}
+                score={`${hud.scores[1]} / ${totalScore}`}
+                description={'TENIENTE'}
+              />
             </div>
+          </div>
+        </CardHeader>
+        <Divider />
 
-            {/* El Canvas principal donde se dibuja el Tetris */}
-            <section className="flex justify-center rounded-md">
-              <canvas id="game-canvas" className="z-0 rounded-md" ref={gameRef} />
-            </section>
-          </CardBody>
-          <Divider />
+        <CardBody className="items-center gap-3">
+          <div className="relative max-w-full">
+            <canvas ref={canvasRef} className="block max-w-full h-auto rounded-md" />
+            {winnerName !== null ? (
+              <Pause text={`¡Ganó ${winnerName}!`}>
+                <Button color="warning" onPress={onRematch}>
+                  Revancha
+                </Button>
+              </Pause>
+            ) : (
+              hud.paused && (
+                <Pause text="PAUSA">
+                  <Button color="warning" onPress={onPause}>
+                    Jugar
+                  </Button>
+                </Pause>
+              )
+            )}
+          </div>
+          <ul className="text-tiny text-default-500 text-center">
+            {CONTROLS_LEGEND.map(line => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </CardBody>
+        <Divider />
 
-          <CardFooter>
-            {/* Controles táctiles/visuales (se muestran dependiendo del dispositivo) */}
-            <Keys show={device !== 'unknown'} />
-          </CardFooter>
-        </Card>
-      </div>
+        <CardFooter>
+          {/* Touch controls for player 1 (shown by default on touch devices) */}
+          <Keys show={device !== 'unknown'} onAction={onAction} onPause={onPause} />
+        </CardFooter>
+      </Card>
     </CustomLayout>
   );
 };
 
 /**
- * Componente Contenedor del Juego.
- * Maneja el ciclo de vida, los estados de React y la inyección de la lógica del juego.
+ * Container component: runs a local shared-board match on @tetris/shared.
+ * The engine state lives inside the effect; React only renders the HUD.
  */
 const GameComponent = ({ player, enemy, totalScore }) => {
   const { deviceType } = useDevice();
-  const gameRef = useRef(null); // Referencia al canvas DOM
-
-  // Estado inicial basado en las constantes
-  const initialGameState = { ...GAME.state, maxScore: totalScore };
-
-  const [gameState, setGameState] = useState(initialGameState);
-  const [playerState, setPlayerState] = useState(player);
-  const [enemyState, setEnemyState] = useState(enemy);
-  const [mounted, setMounted] = useState(false);
+  const canvasRef = useRef(null);
+  const controlsRef = useRef({ action: () => {}, togglePause: () => {} });
+  const [hud, setHud] = useState(initialHud);
+  const [round, setRound] = useState(0);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const canvas = canvasRef.current;
+    canvas.width = CANVAS_COLUMNS * BLOCK_SIZE;
+    canvas.height = CANVAS_ROWS * BLOCK_SIZE;
+    const context = canvas.getContext('2d');
+    context.scale(BLOCK_SIZE, BLOCK_SIZE);
 
-  /**
-   * Efecto que inicializa el motor del juego una vez que el componente se monta.
-   */
-  useEffect(() => {
-    if (mounted && !gameRef.current.hasChildNodes()) {
-      // 'inject' es la función que arranca todo el motor de JS (tetris.js)
-      inject({ gameState, setGameState, playerState, setPlayerState, enemyState, setEnemyState });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted]);
+    let game = createGame({ players: 2, targetScore: totalScore });
+    let inputs = [createInput(), createInput()];
+    let paused = true;
+    let lastTime = null;
+    let frame = 0;
 
-  // Si no está montado, no renderiza nada (previene errores de SSR o canvas no disponible)
-  if (!mounted) return null;
+    const syncHud = () =>
+      setHud({
+        scores: game.players.map(({ score }) => score),
+        paused,
+        winner: game.over ? game.winner : null
+      });
+
+    const apply = result => {
+      game = result.game;
+      if (result.events.some(({ type }) => type !== 'lock')) syncHud();
+      if (game.over) Music.pause();
+    };
+
+    const playing = () => !paused && !game.over;
+
+    controlsRef.current = {
+      action: action => playing() && apply(act(game, 0, action)),
+      togglePause: () => {
+        if (game.over) return;
+        paused = !paused;
+        if (paused) Music.pause();
+        else Music.play();
+        syncHud();
+      }
+    };
+
+    // Game keys are captured before any focused button sees them: NextUI buttons swallow
+    // Space/Enter and would also fire their own action.
+    const claim = event => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    const onKeyDown = event => {
+      if (PAUSE_KEYS.includes(event.code)) {
+        claim(event);
+        controlsRef.current.togglePause();
+        return;
+      }
+      const binding = KEY_BINDINGS[event.code];
+      if (!binding) return;
+      claim(event);
+      if (!playing()) return;
+      press(inputs[binding.player], binding.action).forEach(action =>
+        apply(act(game, binding.player, action))
+      );
+    };
+
+    const onKeyUp = event => {
+      const binding = KEY_BINDINGS[event.code];
+      if (!binding) return;
+      claim(event);
+      release(inputs[binding.player], binding.action);
+    };
+
+    // Key-up events are lost while the window is unfocused: forget every held key.
+    const onBlur = () => {
+      inputs = [createInput(), createInput()];
+    };
+
+    const loop = time => {
+      const delta = lastTime === null ? 0 : Math.min(time - lastTime, MAX_FRAME_MS);
+      lastTime = time;
+      if (playing()) {
+        inputs.forEach((input, index) =>
+          update(input, delta).forEach(action => apply(act(game, index, action)))
+        );
+        apply(tick(game, delta));
+      }
+      drawGame(context, game);
+      frame = requestAnimationFrame(loop);
+    };
+
+    Music.init();
+    setHud(initialHud);
+    frame = requestAnimationFrame(loop);
+    window.addEventListener('keydown', onKeyDown, true);
+    window.addEventListener('keyup', onKeyUp, true);
+    window.addEventListener('blur', onBlur);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('keydown', onKeyDown, true);
+      window.removeEventListener('keyup', onKeyUp, true);
+      window.removeEventListener('blur', onBlur);
+      Music.pause();
+    };
+  }, [round, totalScore]);
 
   return (
     <GameComponentPresentational
-      gameRef={gameRef}
-      player={playerState}
-      enemy={{ ...enemy, piece: playerState.piece, id: 2 }}
+      canvasRef={canvasRef}
+      player={player}
+      enemy={enemy}
+      hud={hud}
       totalScore={totalScore}
       device={deviceType}
+      onAction={action => controlsRef.current.action(action)}
+      onPause={() => controlsRef.current.togglePause()}
+      onRematch={() => setRound(value => value + 1)}
     />
   );
 };

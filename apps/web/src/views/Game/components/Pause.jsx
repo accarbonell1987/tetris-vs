@@ -1,15 +1,12 @@
 import { Chip } from '@nextui-org/react';
 
 /**
- * Componente que muestra una superposición (overlay) de pausa sobre el canvas del juego.
- * @param {string} text - El texto a mostrar (ej. "PAUSE" o "PAUSA").
+ * Overlay over the game canvas (pause, game over) with an optional action below the text.
+ * @param {string} text - Text to show.
  */
-const Pause = ({ text }) => {
+const Pause = ({ text, children }) => {
   return (
-    <div
-      className="flex flex-col items-center justify-center bg-black w-fit h-fit z-10 absolute border-solid border-1 border-gray-300 border-r-2"
-      style={{ width: '288px', height: '480px' }}>
-      {/* Etiqueta estilizada con el texto de pausa */}
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-md bg-black/70">
       <Chip
         size="lg"
         variant="shadow"
@@ -19,6 +16,7 @@ const Pause = ({ text }) => {
         }}>
         {text}
       </Chip>
+      {children}
     </div>
   );
 };

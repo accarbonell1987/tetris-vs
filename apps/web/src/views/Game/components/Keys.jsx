@@ -3,31 +3,30 @@ import {
   ArrowNarrowDown,
   ArrowNarrowLeft,
   ArrowNarrowRight,
-  Flame,
+  ArrowBarToDown,
   KeyboardHide,
   KeyboardShow,
   PlayerPause,
   RotateClockwise
 } from 'tabler-icons-react';
-import { PlayerKeysMapEvents, GlobalKeysMapEvents } from '../func/events';
 import { useState } from 'react';
 
 /**
  * Componente que muestra las flechas de dirección (Izquierda, Derecha, Abajo).
  */
-const LeftArrows = () => {
+const LeftArrows = ({ onAction }) => {
   return (
     <div className="flex gap-2 flex-col">
       <div className="flex gap-2">
         {/* Botón Mover a la Izquierda */}
-        <Button color="warning" variant="solid" onClick={() => PlayerKeysMapEvents.movePieceLeft()}>
+        <Button color="warning" variant="solid" onClick={() => onAction('left')}>
           <ArrowNarrowLeft size={48} strokeWidth={2} color={'black'} />
         </Button>
         {/* Botón Mover a la Derecha */}
         <Button
           color="warning"
           variant="solid"
-          onClick={() => PlayerKeysMapEvents.movePieceRight()}>
+          onClick={() => onAction('right')}>
           <ArrowNarrowRight size={48} strokeWidth={2} color={'black'} />
         </Button>
       </div>
@@ -37,7 +36,7 @@ const LeftArrows = () => {
           className="w-full"
           color="warning"
           variant="solid"
-          onClick={() => PlayerKeysMapEvents.movePieceDown()}>
+          onClick={() => onAction('softDrop')}>
           <ArrowNarrowDown size={48} strokeWidth={2} color={'black'} />
         </Button>
       </div>
@@ -48,7 +47,7 @@ const LeftArrows = () => {
 /**
  * Componente que muestra los botones de acción (Rotar y Booster).
  */
-const RightButtons = () => {
+const RightButtons = ({ onAction }) => {
   return (
     <div>
       <div>
@@ -56,14 +55,14 @@ const RightButtons = () => {
         <Button
           color="success"
           variant="solid"
-          onClick={() => PlayerKeysMapEvents.movePieceRotate()}>
+          onClick={() => onAction('rotateCW')}>
           <RotateClockwise size={48} strokeWidth={2} color={'black'} />
         </Button>
       </div>
       <div>
-        {/* Botón para activar Booster (funcionalidad pendiente) */}
-        <Button color="danger" variant="solid" onClick={() => PlayerKeysMapEvents.fireBooster()}>
-          <Flame size={48} strokeWidth={2} color={'black'} />
+        {/* Botón de caída instantánea (hard drop) */}
+        <Button color="danger" variant="solid" onClick={() => onAction('hardDrop')}>
+          <ArrowBarToDown size={48} strokeWidth={2} color={'black'} />
         </Button>
       </div>
     </div>
@@ -73,11 +72,11 @@ const RightButtons = () => {
 /**
  * Botones centrales: Pausa y control de visibilidad de los controles.
  */
-const MiddleButtons = ({ isMobile, showKeys, setShowKeys }) => {
+const MiddleButtons = ({ isMobile, showKeys, setShowKeys, onPause }) => {
   return (
     <div className="flex flex-col gap-2">
       {/* Botón de Pausa */}
-      <Button isIconOnly variant="solid" size="sm" onClick={() => GlobalKeysMapEvents.pauseGame()}>
+      <Button isIconOnly variant="solid" size="sm" onClick={onPause}>
         <PlayerPause size={18} strokeWidth={2} color={'white'} />
       </Button>
       {/* Botón para ocultar los controles visuales (solo desktop) */}
@@ -100,15 +99,20 @@ const MiddleButtons = ({ isMobile, showKeys, setShowKeys }) => {
 /**
  * Componente principal Keys que maneja la interfaz de controles táctiles/visuales.
  */
-const Keys = ({ show }) => {
+const Keys = ({ show, onAction, onPause }) => {
   const isMobile = show;
   const [showKeys, setShowKeys] = useState(show || false);
 
   const keysComponents = (
     <div className="flex justify-center gap-2">
-      <LeftArrows />
-      <MiddleButtons isMobile={isMobile} showKeys={showKeys} setShowKeys={setShowKeys} />
-      <RightButtons />
+      <LeftArrows onAction={onAction} />
+      <MiddleButtons
+        isMobile={isMobile}
+        showKeys={showKeys}
+        setShowKeys={setShowKeys}
+        onPause={onPause}
+      />
+      <RightButtons onAction={onAction} />
     </div>
   );
 

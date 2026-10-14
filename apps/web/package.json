@@ -17,6 +17,7 @@
     "@react-aria/utils": "^3.23.2",
     "@tanstack/react-query": "^5.28.4",
     "@tanstack/react-query-devtools": "^5.28.4",
+    "@tetris/shared": "1.0.0",
     "axios": "^1.4.0",
     "framer-motion": "^11.0.24",
     "next-themes": "^0.3.0",

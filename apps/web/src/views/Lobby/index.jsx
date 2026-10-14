@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
-import { Card, CardHeader, CardBody } from '@nextui-org/react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Card, CardHeader, CardBody } from '@nextui-org/react';
 import PlayerCard from './components/PlayerCard';
 import { CustomLayout } from '../../components';
 import { useGlobalStorage } from '../../store';
 
 const Lobby = () => {
   const { players, socket, setPlayers } = useGlobalStorage();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!socket) return;
@@ -27,8 +29,11 @@ const Lobby = () => {
         className="flex w-full max-w-[600px] max-h-[70%] min-w-[180px]"
         variant="bordered"
         style={{ border: '1px solid #f0f0f0' }}>
-        <CardHeader>
+        <CardHeader className="flex justify-between">
           <h1> Lobby</h1>
+          <Button color="warning" variant="flat" size="sm" onPress={() => navigate('/game')}>
+            Partida local
+          </Button>
         </CardHeader>
         <CardBody className="overflow-auto scrollbar-hide max-h-screen">
           <div className="flex flex-col gap-3">
