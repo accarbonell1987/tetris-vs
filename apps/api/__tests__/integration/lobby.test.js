@@ -53,7 +53,7 @@ describe('Lobby join/leave flow', () => {
     
     // Expect players array to contain the joined player
     expect(players).toHaveLength(1);
-    expect(players[0]).toEqual(player);
+    expect(players[0]).toEqual({ ...player, status: 'idle' });
   });
 
   test('player leaves lobby and lobby-update reflects removal', async () => {
@@ -110,9 +110,42 @@ describe('Lobby join/leave flow', () => {
     // The last update should have both players
     const lastUpdate = updates[updates.length - 1];
     expect(lastUpdate).toHaveLength(2);
-    expect(lastUpdate).toEqual(expect.arrayContaining([player1, player2]));
+    expect(lastUpdate).toEqual(
+      expect.arrayContaining([
+        { ...player1, status: 'idle' },
+        { ...player2, status: 'idle' }
+      ])
+    );
 
     socket1.disconnect();
     socket2.disconnect();
+  });
+
+  test('disconnecting removes the player from the lobby', async () => {
+    const leaving = ioClient(`http://localhost:${serverPort}`, { forceNew: true });
+    clientSocket = ioClient(`http://localhost:${serverPort}`, { forceNew: true });
+    await Promise.all([
+      new Promise(resolve => leaving.on('connect', resolve)),
+      new Promise(resolve => clientSocket.on('connect', resolve))
+    ]);
+    const player = { id: 'p-gone', name: 'Gone' };
+    const joined = new Promise(resolve => {
+      const handler = players => {
+        if (!players.some(entry => entry.id === player.id)) return;
+        clientSocket.off('lobby-update', handler);
+        resolve();
+      };
+      clientSocket.on('lobby-update', handler);
+    });
+    leaving.emit('lobby-join', { player });
+    await joined;
+
+    const removed = new Promise(resolve => {
+      clientSocket.on('lobby-update', players => {
+        if (!players.some(entry => entry.id === player.id)) resolve(players);
+      });
+    });
+    leaving.disconnect();
+    expect(await removed).toEqual([]);
   });
 });

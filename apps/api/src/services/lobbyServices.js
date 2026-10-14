@@ -28,6 +28,11 @@ export const Lobby = {
     connectedPlayers.delete(player.id);
   },
 
+  setStatus: (id, status) => {
+    const player = connectedPlayers.get(id);
+    if (player) player.status = status;
+  },
+
   getPlayerById: id => {
     return connectedPlayers.get(id);
   },
