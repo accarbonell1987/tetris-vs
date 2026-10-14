@@ -41,9 +41,9 @@ Match (server room `match:<matchId>`):
 
 ## Tasks
 
-- [ ] T1 S1 S4 S6 (+ server side of S3 S5) — API: lobby status and disconnect cleanup, challenges, match referee and relays, tests — delegated (writer A)
-- [ ] T2 S1 S2 S3 S4 S5 — web: lobby VS and invite, `/match` view on the engine, opponent board, garbage meter, round/match overlays — delegated (writer B)
-- [ ] T3 all — two-browser end-to-end check — inline
+- [x] T1 S1 S4 S6 (+ server side of S3 S5) — API: lobby status and disconnect cleanup, challenges, match referee and relays, tests — delegated (writer A) — b8863e5 (RED 18 failing → GREEN 39/39; parent spot check 39/39)
+- [x] T2 S1 S2 S3 S4 S5 — web: lobby VS and invite, `/match` view on the engine, opponent board, garbage meter, round/match overlays — delegated (writer B) — 9ff0a22 (RED module missing → GREEN 8/8 match logic; web suite 37 + 2 pre-existing skips; lint baseline; build OK)
+- [x] T3 all — two-browser end-to-end check — inline — 5530dd7 (two origins localhost/127.0.0.1: self has no VS; challenge → invite → accept → both in /match with same queue and countdown; 4 garbage lines from the real socket rose as gray rows with one hole; opponent board snapshots live; KO rounds 0-1, 1-1, 1-2 → match-end win/lose; back to lobby idle; decline notice; Abandonar → 'Tu rival abandonó'; /game unchanged)
 
 Route: T1 and T2 are delegated in parallel (Writer trigger: parallelism, disjoint surfaces `apps/api/**` vs `apps/web/**`, plus the long-session context backstop). The parent owns git, this document and the end-to-end check.
 
@@ -51,3 +51,6 @@ Route: T1 and T2 are delegated in parallel (Writer trigger: parallelism, disjoin
 
 - L1 (2026-10-14) User: "dale, arrancá con el paso 3"
 - L2 Step 3 as proposed: "Online: desafío desde el lobby, sala, eventos de basura y snapshots, rondas al mejor de 3."
+- L3 (2026-10-14) Writers' interpretations accepted: accept/decline carry the challenger id; a disconnect forfeits but removes the lobby player only when no other socket of that player is connected (refresh race); starting a match drops every pending challenge of both players; challenge-error messages are English strings shown as is; navigating away from /match without Abandonar does not send match-leave (StrictMode double mount).
+- L4 (2026-10-14) E2E found the opponent board blending into the NextUI dark card (same #18181b): outlined it (5530dd7).
+
