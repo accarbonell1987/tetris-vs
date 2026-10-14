@@ -6,6 +6,8 @@ export const BOARD_WIDTH = 10;
 export const VISIBLE_ROWS = 20;
 export const HIDDEN_ROWS = 2; // spawn buffer above the visible field
 export const NEXT_COUNT = 5;
+export const LOCK_DELAY = 500;
+export const MAX_LOCK_RESETS = 15;
 
 // mulberry32: randomness lives in plain state, so the same seed replays the same game.
 const random = seed => {
@@ -49,18 +51,26 @@ const hitsOtherPieces = (game, piece, index) => {
 
 const collides = (game, piece, index) => hitsBoard(game, piece) || hitsOtherPieces(game, piece, index);
 
-const place = (game, index, type) => {
-  const player = game.players[index];
-  player.active = { type, rotation: 0, x: player.spawnX + (type === 'O' ? 1 : 0), y: 0 };
-  player.lastKick = -1;
+const topOut = (game, index, events) => {
+  game.players[index].active = null;
+  game.over = true;
+  game.loser = index;
+  events.push({ type: 'topOut', player: index });
 };
 
-const spawnNext = (game, index) => {
+const place = (game, index, type, events) => {
+  const player = game.players[index];
+  player.active = { type, rotation: 0, x: player.spawnX + (type === 'O' ? 1 : 0), y: 0 };
+  Object.assign(player, { lastKick: -1, lockTimer: 0, lockResets: 0, lowestY: 0, gravityTimer: 0 });
+  if (hitsBoard(game, player.active)) topOut(game, index, events);
+};
+
+const spawnNext = (game, index, events) => {
   const player = game.players[index];
   fillQueue(player);
   const type = player.queue.shift();
   fillQueue(player);
-  place(game, index, type);
+  place(game, index, type, events);
 };
 
 const tryMove = (game, index, changes) => {
@@ -69,6 +79,8 @@ const tryMove = (game, index, changes) => {
   if (collides(game, candidate, index)) return false;
   player.active = candidate;
   player.lastKick = -1;
+  // Reaching a new lowest row earns a fresh set of lock delay resets.
+  if (candidate.y > player.lowestY) Object.assign(player, { lowestY: candidate.y, lockResets: 0 });
   return true;
 };
 
@@ -89,23 +101,40 @@ const tryRotate = (game, index, direction) => {
   return false;
 };
 
+const clearLines = game => {
+  const remaining = game.board.filter(row => row.includes(0));
+  const cleared = game.board.length - remaining.length;
+  const empty = Array.from({ length: cleared }, () => Array(BOARD_WIDTH).fill(0));
+  game.board = [...empty, ...remaining];
+  return cleared;
+};
+
 const lockPiece = (game, index, events) => {
   const player = game.players[index];
+  const cells = getCells(player.active);
   const value = PIECE_TYPES.indexOf(player.active.type) + 1;
-  getCells(player.active).forEach(([x, y]) => {
+  cells.forEach(([x, y]) => {
     game.board[y][x] = value;
   });
   player.holdUsed = false;
   events.push({ type: 'lock', player: index });
-  spawnNext(game, index);
+
+  const lines = clearLines(game);
+  if (lines) {
+    player.lines += lines;
+    events.push({ type: 'clear', player: index, lines });
+  } else if (cells.every(([, y]) => y < HIDDEN_ROWS)) {
+    return topOut(game, index, events); // lock out
+  }
+  spawnNext(game, index, events);
 };
 
-const hold = (game, index) => {
+const hold = (game, index, events) => {
   const player = game.players[index];
   if (player.holdUsed) return;
   const held = player.active.type;
-  if (player.hold) place(game, index, player.hold);
-  else spawnNext(game, index);
+  if (player.hold) place(game, index, player.hold, events);
+  else spawnNext(game, index, events);
   player.hold = held;
   player.holdUsed = true;
 };
@@ -117,7 +146,12 @@ const createPlayer = (seed, spawnX) => ({
   queue: [],
   bagSeed: seed,
   spawnX,
-  lastKick: -1
+  lastKick: -1,
+  lockTimer: 0,
+  lockResets: 0,
+  lowestY: 0,
+  gravityTimer: 0,
+  lines: 0
 });
 
 /**
@@ -132,9 +166,10 @@ export const createGame = ({
   const game = {
     board: Array.from({ length: VISIBLE_ROWS + HIDDEN_ROWS }, () => Array(BOARD_WIDTH).fill(0)),
     players: spawnColumns.slice(0, players).map(spawnX => createPlayer(seed, spawnX)),
-    over: false
+    over: false,
+    loser: null
   };
-  game.players.forEach((_, index) => spawnNext(game, index));
+  game.players.forEach((_, index) => spawnNext(game, index, []));
   return game;
 };
 
@@ -144,7 +179,7 @@ const ACTIONS = {
   softDrop: (game, index) => tryMove(game, index, { y: game.players[index].active.y + 1 }),
   rotateCW: (game, index) => tryRotate(game, index, 1),
   rotateCCW: (game, index) => tryRotate(game, index, -1),
-  hold: (game, index) => hold(game, index),
+  hold: (game, index, events) => hold(game, index, events),
   hardDrop: (game, index, events) => {
     while (tryMove(game, index, { y: game.players[index].active.y + 1 }));
     const { active } = game.players[index];
@@ -157,7 +192,56 @@ const ACTIONS = {
 export const act = (game, index, action) => {
   const next = structuredClone(game);
   const events = [];
-  if (!next.over && next.players[index].active) ACTIONS[action](next, index, events);
+  if (next.over || !next.players[index].active) return { game: next, events };
+  const moved = ACTIONS[action](next, index, events);
+  const player = next.players[index];
+  // A successful move or rotation while the lock delay runs restarts it, up to MAX_LOCK_RESETS.
+  if (moved === true && player.lockTimer > 0) {
+    player.lockTimer = 0;
+    player.lockResets++;
+  }
+  return { game: next, events };
+};
+
+// Guideline gravity curve: seconds per row = (0.8 - (level - 1) * 0.007) ^ (level - 1).
+const gravityInterval = player => {
+  const level = Math.min(20, Math.floor(player.lines / 10) + 1);
+  return (0.8 - (level - 1) * 0.007) ** (level - 1) * 1000;
+};
+
+const applyGravity = (game, index, deltaMs) => {
+  const player = game.players[index];
+  const interval = gravityInterval(player);
+  player.gravityTimer += deltaMs;
+  while (player.gravityTimer >= interval) {
+    player.gravityTimer -= interval;
+    if (!tryMove(game, index, { y: player.active.y + 1 })) {
+      player.gravityTimer = 0;
+      return;
+    }
+  }
+};
+
+const applyLockDelay = (game, index, deltaMs, events) => {
+  const player = game.players[index];
+  const { active } = player;
+  if (!hitsBoard(game, { ...active, y: active.y + 1 })) {
+    player.lockTimer = 0;
+    return;
+  }
+  player.lockTimer += deltaMs;
+  if (player.lockTimer >= LOCK_DELAY || player.lockResets >= MAX_LOCK_RESETS) lockPiece(game, index, events);
+};
+
+/** Advances time: gravity and lock delay for every player. Returns a new game. */
+export const tick = (game, deltaMs) => {
+  const next = structuredClone(game);
+  const events = [];
+  next.players.forEach((player, index) => {
+    if (next.over || !player.active) return;
+    applyGravity(next, index, deltaMs);
+    applyLockDelay(next, index, deltaMs, events);
+  });
   return { game: next, events };
 };
 
