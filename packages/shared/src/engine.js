@@ -11,6 +11,7 @@ export const MAX_LOCK_RESETS = 15;
 export const GARBAGE_DELAY = 500;
 export const GARBAGE_CELL = 8;
 
+const LINE_POINTS = [0, 100, 300, 500, 800];
 const LINE_ATTACK = { none: [0, 0, 1, 2, 4], mini: [0, 0, 1], full: [0, 2, 4, 6] };
 const COMBO_BONUS = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5]; // Tetris 99 table, indexed by combo count
 const T_CORNERS = [[0, 0], [2, 0], [2, 2], [0, 2]]; // clockwise from top-left of the T's 3x3 box
@@ -61,6 +62,7 @@ const topOut = (game, index, events) => {
   game.players[index].active = null;
   game.over = true;
   game.loser = index;
+  game.winner = game.players.length === 2 ? 1 - index : null;
   events.push({ type: 'topOut', player: index });
 };
 
@@ -68,7 +70,12 @@ const place = (game, index, type, events) => {
   const player = game.players[index];
   player.active = { type, rotation: 0, x: player.spawnX + (type === 'O' ? 1 : 0), y: 0 };
   Object.assign(player, { lastKick: -1, lockTimer: 0, lockResets: 0, lowestY: 0, gravityTimer: 0 });
-  if (hitsBoard(game, player.active)) topOut(game, index, events);
+  if (hitsBoard(game, player.active)) return topOut(game, index, events);
+  // Shared board: the other player's falling piece is in the way, so retry on the next tick.
+  if (hitsOtherPieces(game, player.active, index)) {
+    player.queue.unshift(type);
+    player.active = null;
+  }
 };
 
 const spawnNext = (game, index, events) => {
@@ -79,14 +86,18 @@ const spawnNext = (game, index, events) => {
   place(game, index, type, events);
 };
 
+// Reaching a new lowest row earns a fresh set of lock delay resets.
+const setActive = (player, piece, lastKick) => {
+  player.active = piece;
+  player.lastKick = lastKick;
+  if (piece.y > player.lowestY) Object.assign(player, { lowestY: piece.y, lockResets: 0 });
+};
+
 const tryMove = (game, index, changes) => {
   const player = game.players[index];
   const candidate = { ...player.active, ...changes };
   if (collides(game, candidate, index)) return false;
-  player.active = candidate;
-  player.lastKick = -1;
-  // Reaching a new lowest row earns a fresh set of lock delay resets.
-  if (candidate.y > player.lowestY) Object.assign(player, { lowestY: candidate.y, lockResets: 0 });
+  setActive(player, candidate, -1);
   return true;
 };
 
@@ -99,20 +110,29 @@ const tryRotate = (game, index, direction) => {
     const [offsetX, offsetUp] = kicks[kick];
     const candidate = { ...active, rotation, x: active.x + offsetX, y: active.y - offsetUp };
     if (!collides(game, candidate, index)) {
-      player.active = candidate;
-      player.lastKick = kick;
+      setActive(player, candidate, kick);
       return true;
     }
   }
   return false;
 };
 
+// Removes full rows and returns their indexes.
 const clearLines = game => {
+  const fullRows = game.board.flatMap((row, y) => (row.includes(0) ? [] : [y]));
   const remaining = game.board.filter(row => row.includes(0));
-  const cleared = game.board.length - remaining.length;
-  const empty = Array.from({ length: cleared }, () => Array(BOARD_WIDTH).fill(0));
+  const empty = Array.from({ length: fullRows.length }, () => Array(BOARD_WIDTH).fill(0));
   game.board = [...empty, ...remaining];
-  return cleared;
+  return fullRows;
+};
+
+// Shared board: rows above a clear fall onto the other falling pieces, so an overlapped piece falls with them.
+const followClearedRows = (game, index, clearedRows) => {
+  game.players.forEach((other, otherIndex) => {
+    if (otherIndex === index || !other.active || !hitsBoard(game, other.active)) return;
+    const bottom = Math.max(...getCells(other.active).map(([, y]) => y));
+    other.active.y += clearedRows.filter(row => row > bottom).length;
+  });
 };
 
 // 3-corner rule: full T-spin when both front corners are filled or the last SRS kick was needed.
@@ -172,10 +192,18 @@ const lockPiece = (game, index, events) => {
   player.holdUsed = false;
   events.push({ type: 'lock', player: index });
 
-  const lines = clearLines(game);
+  const clearedRows = clearLines(game);
+  const lines = clearedRows.length;
   if (lines) {
     player.lines += lines;
-    events.push({ type: 'clear', player: index, lines, ...computeAttack(player, lines, tSpin) });
+    player.score += LINE_POINTS[lines];
+    const attack = computeAttack(player, lines, tSpin);
+    events.push({ type: 'clear', player: index, lines, points: LINE_POINTS[lines], ...attack });
+    followClearedRows(game, index, clearedRows);
+    if (game.targetScore && player.score >= game.targetScore) {
+      Object.assign(game, { over: true, winner: index });
+      return events.push({ type: 'win', player: index });
+    }
   } else {
     player.combo = -1;
     if (cells.every(([, y]) => y < HIDDEN_ROWS)) return topOut(game, index, events); // lock out
@@ -208,6 +236,7 @@ const createPlayer = (seed, spawnX) => ({
   lowestY: 0,
   gravityTimer: 0,
   lines: 0,
+  score: 0,
   combo: -1,
   backToBack: false,
   pendingGarbage: []
@@ -216,17 +245,21 @@ const createPlayer = (seed, spawnX) => ({
 /**
  * Creates a game. One player = an online board; two players = the local shared board.
  * The default seed is the only impure part: pass a seed to replay or sync a game.
+ * targetScore ends the game when a player reaches it (local mode uses 3000).
  */
 export const createGame = ({
   seed = Math.floor(Math.random() * 2 ** 32),
   players = 1,
-  spawnColumns = players === 1 ? [3] : [1, 6]
+  spawnColumns = players === 1 ? [3] : [1, 6],
+  targetScore = null
 } = {}) => {
   const game = {
     board: Array.from({ length: VISIBLE_ROWS + HIDDEN_ROWS }, () => Array(BOARD_WIDTH).fill(0)),
     players: spawnColumns.slice(0, players).map(spawnX => createPlayer(seed, spawnX)),
     over: false,
-    loser: null
+    loser: null,
+    winner: null,
+    targetScore
   };
   game.players.forEach((_, index) => spawnNext(game, index, []));
   return game;
@@ -301,6 +334,7 @@ export const tick = (game, deltaMs) => {
     player.pendingGarbage.forEach(entry => {
       entry.timer += deltaMs;
     });
+    if (!player.active) spawnNext(next, index, events);
     if (!player.active) return;
     applyGravity(next, index, deltaMs);
     applyLockDelay(next, index, deltaMs, events);
