@@ -18,10 +18,11 @@ Assumptions (marked):
 
 ## Tasks
 
-- [ ] T1 S3 S4 — remove fake tests, fix lint (web + api), remove dead code — inline
-- [ ] T2 S2 — root scripts and CI workflow — inline
-- [ ] T3 S1 — rewrite docs, delete stale artifacts — inline
+- [x] T1 S3 S4 — remove fake tests, fix lint (web + api), remove dead code — inline — 5ab423e (web lint 0 problems exit 0, api lint exit 0 with dist ignored; web 39/39 no skips, api 43/43)
+- [x] T2 S2 — root scripts and CI workflow — inline — 6dddf36 (root npm run lint exit 0, root npm test exit 0: shared 33, api 43, web 39; workflow itself first runs on the PR)
+- [x] T3 S1 — rewrite docs, delete stale artifacts — inline — 3cfd626 (no dangling references to deleted files; docs formatted with Prettier; AppShell path checked against the tree)
 
 ## Log
 
 - L1 (2026-10-14) User: "dale, empezá por la higiene"
+- L2 (2026-10-14) Done: fake web integration tests removed (web 43+2 skipped → 39, no skips), lint clean in both apps (web --max-warnings 0, api with dist ignored), dead socketServices.js and rememberMe branch removed, root npm test/lint scripts, CI workflow, README/TODO/protocol/app READMEs rewritten, SDD artifacts and copied pipeline deleted. CI has not run yet: its first run is on the PR. Left: .atl/ local changes untouched; package-lock.json still gitignored (in TODO.md).
