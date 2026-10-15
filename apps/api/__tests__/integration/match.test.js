@@ -5,6 +5,8 @@ import { httpServer } from '../../src/server.js';
 // ponytail: websocket only; with the default polling→websocket upgrade an event is lost now and then
 // (about 1 run in 15 timed out), investigate the upgrade path if real clients ever show it.
 const CLIENT_OPTIONS = { forceNew: true, transports: ['websocket'] };
+// Read by the server when a grace starts (match-reconnect S1).
+process.env.RECONNECT_GRACE_MS = '200';
 
 const waitFor = (socket, event, predicate = () => true) =>
   new Promise(resolve => {
@@ -328,16 +330,21 @@ describe('Online match flow', () => {
     await bothIdle;
   });
 
-  test('disconnecting mid-match forfeits and removes the player from the lobby', async () => {
+  // match-reconnect S1: a drop no longer forfeits at once, the opponent wins when the grace runs out.
+  test('disconnecting mid-match loses by disconnect after the grace and removes the player from the lobby', async () => {
     const { alice, bob, start } = await startMatch();
+    const graceStarted = waitFor(bob.socket, 'opponent-disconnected');
     const end = waitFor(bob.socket, 'match-end');
     const update = waitFor(
       bob.socket,
       'lobby-update',
-      players => !players.some(entry => entry.id === alice.player.id)
+      players =>
+        !players.some(entry => entry.id === alice.player.id) &&
+        players.some(entry => entry.id === bob.player.id && entry.status === 'idle')
     );
     alice.socket.disconnect();
-    expect(await end).toEqual({ winner: bob.player.id, wins: start.wins, reason: 'forfeit' });
+    expect(await graceStarted).toEqual({ graceMs: 200 });
+    expect(await end).toEqual({ winner: bob.player.id, wins: start.wins, reason: 'disconnect' });
     const players = await update;
     expect(players.find(entry => entry.id === bob.player.id).status).toBe('idle');
   });
