@@ -32,10 +32,13 @@ Assumptions (marked):
 
 ## Tasks
 
-- [ ] T1 S1-S6 — API and web implementation with tests — delegated (writer; context backstop of the parent session)
-- [ ] T2 all — browser checks: network drop (socket disconnect/connect), reload mid-round, grace timeout, closing one of two tabs, stale invite — inline
-- [ ] T3 docs — update `docs/event-flow.md`, `TODO.md` — inline
+- [x] T1 S1-S6 — API and web implementation with tests — delegated (writer; context backstop of the parent session) — 2c3df22 api, c61dea2 web (RED api 9 / web 11 failing → GREEN; root npm test and lint exit 0)
+- [x] T2 all — browser checks — inline — 457f8ef (drop: 'Reconectando…' / 'Esperando a Tester… 14', same board resumed at 0-0; reload: found a bug costing two rounds, fixed, then exactly one round lost (1-0, round 2 countdown on both); /game redirects to /match during a match; grace timeout: '¡Ganaste la partida! Tu rival no volvió a conectarse'. Two-tab close and challenge-cancelled covered by integration/AppShell tests only)
+- [x] T3 docs — update `docs/event-flow.md`, `TODO.md` — inline
 
 ## Log
 
 - L1 (2026-10-14) User: "dale, arrancá con la reconexión" (answer to: "¿Arranco con la reconexión e incluyo esos tres pendientes chicos?")
+- L2 (2026-10-14) Writer interpretations accepted: `challenge-cancelled.from` is an id; re-challenging the same target cancels nothing; a disconnected player leaves the lobby list during the grace; the client sends `hasGame: false` when it topped out; a client back online after the grace ended shows "La partida terminó".
+- L3 (2026-10-14) Browser bug: a reload sends `lobby-join` twice (StrictMode), each answered with `match-active`; the mounted /match answered the second one with another `match-rejoin { hasGame: false }` and lost a second round. Fix 457f8ef: `shouldRejoin` answers `match-active` only while the client is `reconnecting` (RED 3 failing → GREEN, web 54/54).
+
