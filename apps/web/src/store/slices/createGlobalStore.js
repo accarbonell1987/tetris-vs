@@ -9,9 +9,11 @@ export const createGlobalStore = set => ({
   removePlayer: playerId => set(state => ({
     players: state.players.filter(p => p.id !== playerId)
   })),
-  // Payload of the last `match-start`; the /match view runs the match from it.
+  // Payload of the last `match-start` or `match-active`; the /match view runs the match from it.
+  // `over` once the server ended it: the player may leave /match and the match is dropped.
   match: null,
   setMatch: match => set({ match }),
+  finishMatch: () => set(state => ({ match: state.match && { ...state.match, over: true } })),
   clearMatch: () => set({ match: null }),
   // Challenge feedback for the lobby (sent, declined, error).
   notice: null,

@@ -37,6 +37,14 @@ const httpServer = http.createServer(app);
 const io = new Server(httpServer, { pingInterval: 2000, pingTimeout: 5000, cors: { origin: true } });
 
 const COUNTDOWN_MS = 3000;
+// S1: how long a dropped player has to come back. Read per grace so tests can shorten it.
+const graceMs = () => Number(process.env.RECONNECT_GRACE_MS) || 15000;
+// player id -> pending grace timer (a player is in one match at a time)
+const graceTimers = new Map();
+const clearGrace = playerId => {
+  clearTimeout(graceTimers.get(playerId));
+  graceTimers.delete(playerId);
+};
 
 const playerRoom = id => `player:${id}`;
 const matchRoom = id => `match:${id}`;
@@ -67,6 +75,29 @@ const currentMatch = (socket, message) => {
   return match;
 };
 
+// match-start and match-active payload.
+const matchInfo = match => ({
+  matchId: match.id,
+  players: match.players,
+  round: match.round,
+  seed: match.seed,
+  wins: { ...match.wins },
+  countdownMs: COUNTDOWN_MS
+});
+
+// A2: a player is connected to the match while one of their sockets is in its room.
+const inMatchRoom = (match, playerId) => {
+  const matchSockets = io.sockets.adapter.rooms.get(matchRoom(match.id));
+  const playerSockets = io.sockets.adapter.rooms.get(playerRoom(playerId)) ?? [];
+  return Array.from(playerSockets).some(socketId => matchSockets?.has(socketId));
+};
+
+// A4: the target of a challenge dropped before accept/decline closes its invite.
+const cancelChallenge = fromId => {
+  const toId = Match.challengeTarget(fromId);
+  if (toId !== undefined) io.to(playerRoom(toId)).emit('challenge-cancelled', { from: fromId });
+};
+
 // Sends to the opponent's sockets in the match room.
 const relayToOpponent = (socket, match, event, payload) =>
   io.to(matchRoom(match.id)).except(playerRoom(socket.data.playerId)).emit(event, payload);
@@ -75,31 +106,52 @@ const startMatch = (fromId, toId) => {
   const players = [fromId, toId].map(id => publicPlayer(Lobby.getPlayerById(id)));
   const match = Match.create(players);
   players.forEach(player => {
+    cancelChallenge(player.id);
     Match.dropChallenges(player.id);
     Lobby.setStatus(player.id, 'playing');
     io.in(playerRoom(player.id)).socketsJoin(matchRoom(match.id));
   });
-  io.to(matchRoom(match.id)).emit('match-start', {
-    matchId: match.id,
-    players,
-    round: match.round,
-    seed: match.seed,
-    wins: match.wins,
-    countdownMs: COUNTDOWN_MS
-  });
+  io.to(matchRoom(match.id)).emit('match-start', matchInfo(match));
   broadcastLobby();
 };
 
 const endMatch = (match, payload) => {
   io.to(matchRoom(match.id)).emit('match-end', payload);
   io.in(matchRoom(match.id)).socketsLeave(matchRoom(match.id));
-  match.players.forEach(player => Lobby.setStatus(player.id, 'idle'));
+  match.players.forEach(player => {
+    clearGrace(player.id);
+    Lobby.setStatus(player.id, 'idle');
+  });
   broadcastLobby();
 };
 
-const forfeitMatch = (match, playerId) => {
+const forfeitMatch = (match, playerId, reason = 'forfeit') => {
   const result = match && Match.forfeit(match.id, playerId);
-  if (result) endMatch(match, { ...result, reason: 'forfeit' });
+  if (result) endMatch(match, { ...result, reason });
+};
+
+// Same as a top-out: round-end, then round-start or match-end on the second loss.
+const loseRound = (match, playerId, round) => {
+  const result = Match.topOut(match.id, playerId, round);
+  if (!result) return;
+  const { winner, wins, matchOver } = result;
+  io.to(matchRoom(match.id)).emit('round-end', { round, winner, wins });
+  if (matchOver) return endMatch(match, { winner, wins, reason: 'ko' });
+  io.to(matchRoom(match.id)).emit('round-start', {
+    round: match.round,
+    seed: match.seed,
+    wins,
+    countdownMs: COUNTDOWN_MS
+  });
+};
+
+// S1, S5: only the player's last socket leaving the match room pauses it; the opponent wins if they stay away.
+const startGrace = (match, playerId) => {
+  if (graceTimers.has(playerId) || inMatchRoom(match, playerId)) return;
+  const milliseconds = graceMs();
+  io.to(matchRoom(match.id)).emit('opponent-disconnected', { graceMs: milliseconds });
+  const timer = setTimeout(() => forfeitMatch(Match.get(match.id), playerId, 'disconnect'), milliseconds);
+  graceTimers.set(playerId, timer);
 };
 
 io.on('connection', socket => {
@@ -114,8 +166,10 @@ io.on('connection', socket => {
     socket.data.playerId = player.id;
     socket.join(playerRoom(player.id));
     // A second tab (or a refresh) of a player in a match must not mark them idle.
-    const status = Match.findByPlayer(player.id) ? 'playing' : 'idle';
-    Lobby.addPlayer({ ...publicPlayer(player), status });
+    const match = Match.findByPlayer(player.id);
+    Lobby.addPlayer({ ...publicPlayer(player), status: match ? 'playing' : 'idle' });
+    // A reconnect, reload or new tab learns its match; /match answers with match-rejoin.
+    if (match) socket.emit('match-active', matchInfo(match));
     broadcastLobby();
   });
   socket.on('lobby-leave', message => {
@@ -131,6 +185,7 @@ io.on('connection', socket => {
     const target = Lobby.getPlayerById(message?.to);
     const error = challengeError(fromId, target);
     if (error) return socket.emit('challenge-error', { message: error });
+    if (Match.challengeTarget(fromId) !== target.id) cancelChallenge(fromId);
     Match.sendChallenge(fromId, target.id).forEach(replacedId =>
       io.to(playerRoom(replacedId)).emit('challenge-error', { message: `${target.name} recibió otro desafío` })
     );
@@ -168,17 +223,21 @@ io.on('connection', socket => {
 
   socket.on('match-topout', message => {
     const match = Match.get(message?.matchId);
-    const result = match && Match.topOut(match.id, socket.data.playerId, message.round);
-    if (!result) return;
-    const { round, winner, wins, matchOver } = result;
-    io.to(matchRoom(match.id)).emit('round-end', { round, winner, wins });
-    if (matchOver) return endMatch(match, { winner, wins, reason: 'ko' });
-    io.to(matchRoom(match.id)).emit('round-start', {
-      round: match.round,
-      seed: match.seed,
-      wins,
-      countdownMs: COUNTDOWN_MS
-    });
+    if (match) loseRound(match, socket.data.playerId, message.round);
+  });
+
+  // S2, S3: a client back in /match. With its board it resumes the round; without it (reload) it loses it.
+  socket.on('match-rejoin', message => {
+    const match = Match.get(message?.matchId);
+    const playerId = socket.data.playerId;
+    if (!match || !Match.isMember(match, playerId)) return;
+    clearGrace(playerId);
+    socket.join(matchRoom(match.id));
+    if (message.hasGame === true && message.round === match.round) {
+      const resume = { round: match.round, wins: { ...match.wins }, countdownMs: COUNTDOWN_MS };
+      return io.to(matchRoom(match.id)).emit('match-resume', resume);
+    }
+    loseRound(match, playerId, match.round);
   });
 
   socket.on('match-leave', message => {
@@ -189,7 +248,9 @@ io.on('connection', socket => {
     Console.log('user disconnected');
     const playerId = socket.data.playerId;
     if (playerId === undefined) return;
-    forfeitMatch(Match.findByPlayer(playerId), playerId);
+    const match = Match.findByPlayer(playerId);
+    if (match) startGrace(match, playerId);
+    cancelChallenge(playerId);
     Match.dropChallenges(playerId);
     // ponytail: a refresh can reconnect before the old socket drops; keep the player listed while any socket remains
     if (io.sockets.adapter.rooms.has(playerRoom(playerId))) return;

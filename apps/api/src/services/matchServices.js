@@ -75,6 +75,8 @@ export const Match = {
     return replaced;
   },
 
+  challengeTarget: fromId => pendingChallenges.get(fromId),
+
   // Consumes the challenge; true when it was pending.
   takeChallenge: (fromId, toId) => {
     if (pendingChallenges.get(fromId) !== toId) return false;

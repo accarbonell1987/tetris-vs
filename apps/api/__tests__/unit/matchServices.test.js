@@ -92,6 +92,16 @@ describe('Match service', () => {
       expect(Match.takeChallenge('c', 'b')).toBe(true);
     });
 
+    test('challengeTarget is the pending target of a challenger, until the challenge is consumed', () => {
+      expect(Match.challengeTarget('a')).toBeUndefined();
+      Match.sendChallenge('a', 'b');
+      expect(Match.challengeTarget('a')).toBe('b');
+      Match.sendChallenge('a', 'c');
+      expect(Match.challengeTarget('a')).toBe('c');
+      Match.takeChallenge('a', 'c');
+      expect(Match.challengeTarget('a')).toBeUndefined();
+    });
+
     test('dropping a player removes challenges sent by and to them', () => {
       Match.sendChallenge('a', 'b');
       Match.sendChallenge('c', 'a');
