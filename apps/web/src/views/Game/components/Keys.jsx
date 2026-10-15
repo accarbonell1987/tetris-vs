@@ -4,6 +4,7 @@ import {
   ArrowNarrowLeft,
   ArrowNarrowRight,
   ArrowBarToDown,
+  Archive,
   KeyboardHide,
   KeyboardShow,
   PlayerPause,
@@ -72,12 +73,18 @@ const RightButtons = ({ onAction }) => {
 /**
  * Botones centrales: Pausa y control de visibilidad de los controles.
  */
-const MiddleButtons = ({ isMobile, showKeys, setShowKeys, onPause }) => {
+const MiddleButtons = ({ isMobile, showKeys, setShowKeys, onPause, onAction }) => {
   return (
     <div className="flex flex-col gap-2">
-      {/* Botón de Pausa */}
-      <Button isIconOnly variant="solid" size="sm" onClick={onPause}>
-        <PlayerPause size={18} strokeWidth={2} color={'white'} />
+      {/* Botón de Pausa (solo modo local: online no hay pausa) */}
+      {onPause ? (
+        <Button isIconOnly aria-label="Pausa" variant="solid" size="sm" onClick={onPause}>
+          <PlayerPause size={18} strokeWidth={2} color={'white'} />
+        </Button>
+      ) : null}
+      {/* Botón para guardar la pieza (hold) */}
+      <Button isIconOnly aria-label="Guardar pieza" color="secondary" variant="solid" size="sm" onClick={() => onAction('hold')}>
+        <Archive size={18} strokeWidth={2} color={'white'} />
       </Button>
       {/* Botón para ocultar los controles visuales (solo desktop) */}
       {!isMobile ? (
@@ -111,6 +118,7 @@ const Keys = ({ show, onAction, onPause }) => {
         showKeys={showKeys}
         setShowKeys={setShowKeys}
         onPause={onPause}
+        onAction={onAction}
       />
       <RightButtons onAction={onAction} />
     </div>

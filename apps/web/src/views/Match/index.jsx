@@ -1,9 +1,11 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Button, Card, CardHeader, CardBody, Divider, User } from '@nextui-org/react';
+import { Button, Card, CardHeader, CardBody, CardFooter, Divider, User } from '@nextui-org/react';
 import { createGame, act, tick, receiveGarbage, BOARD_WIDTH, HIDDEN_ROWS, VISIBLE_ROWS } from '@tetris/shared';
 import { CustomLayout } from '../../components';
 import { useGlobalStorage } from '../../store';
+import { useDevice } from '../../hooks';
+import Keys from '../Game/components/Keys';
 import Pause from '../Game/components/Pause';
 import { createInput, press, release, update } from '../Game/input';
 import { drawMatch, MATCH_CANVAS_COLUMNS, CANVAS_ROWS } from '../Game/render';
@@ -71,6 +73,9 @@ const OnlineMatch = ({ started }) => {
   const { socket, player, players: lobbyPlayers, clearMatch } = useGlobalStorage();
   const navigate = useNavigate();
   const canvasRef = useRef(null);
+  const { deviceType } = useDevice();
+  // Touch buttons call into the game loop of the current round.
+  const touchActionRef = useRef(() => {});
   const [match, dispatch] = useReducer(matchReducer, started, createMatchState);
   const stateRef = useRef(match);
   // A match restored by match-active (reload, new tab) tells the server once that its board is gone (S3).
@@ -148,6 +153,7 @@ const OnlineMatch = ({ started }) => {
     let frame = 0;
 
     const playing = () => isPlaying(stateRef.current) && !game.over;
+    touchActionRef.current = action => playing() && apply(act(game, 0, action));
     const sendBoard = () => socket?.emit('match-board', { matchId, round, board: buildSnapshot(game) });
 
     const apply = result => {
@@ -278,6 +284,11 @@ const OnlineMatch = ({ started }) => {
             </Button>
           ) : null}
         </CardBody>
+        <Divider />
+        <CardFooter>
+          {/* Touch controls (shown by default on touch devices); no pause online. */}
+          <Keys show={deviceType !== 'unknown'} onAction={action => touchActionRef.current(action)} />
+        </CardFooter>
       </Card>
     </CustomLayout>
   );
