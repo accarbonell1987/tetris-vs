@@ -6,11 +6,7 @@ Prioridad: `[P1]` alta · `[P2]` media · `[P3]` baja.
 
 ## Online: robustez
 
-- [ ] `[P1]` **Reconexión a una partida en curso.** Hoy un corte de red de unos 7 s hace perder la partida por abandono. El servidor debería esperar un margen y reincorporar al jugador.
 - [ ] `[P1]` **Validación en el servidor.** El servidor confía en el cliente (top-outs, basura enviada). Es necesario validar o simular las partidas en el servidor para evitar trampas.
-- [ ] `[P2]` **Salir de `/match` sin "Abandonar"** (por ejemplo, con el botón atrás) deja la partida guardada en el store del cliente.
-- [ ] `[P2]` **Cualquier socket desconectado hace perder la partida.** Cerrar una segunda pestaña que solo estaba en el lobby también hace perder la partida.
-- [ ] `[P3]` **Invitación obsoleta.** Si un jugador te desafía y después desafía a otro, tu invitación sigue abierta y al aceptarla responde "El desafío ya no está disponible".
 
 ## Producto
 
