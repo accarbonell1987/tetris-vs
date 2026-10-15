@@ -17,6 +17,5 @@ Prioridad: `[P1]` alta · `[P2]` media · `[P3]` baja.
 
 ## Infraestructura
 
-- [ ] `[P2]` **Versionar `package-lock.json`.** Hoy está en `.gitignore`, así que el CI instala con `npm install` y no con `npm ci`.
 - [ ] `[P2]` **Deploy.** No hay ningún entorno publicado.
 - [ ] `[P3]` **Prettier.** `apps/api` tiene `format:check`, pero varios archivos no lo cumplen y el CI no lo ejecuta.

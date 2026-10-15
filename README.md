@@ -49,7 +49,7 @@ npm workspaces:
 Requires Node 24.
 
 ```bash
-npm install
+npm ci
 ```
 
 ```bash
@@ -62,7 +62,7 @@ npm run web
 
 - **API:** runs on `http://localhost:3000` (`PORT` and `SERVER` env vars).
 - **Web:** runs on `http://localhost:5173`. It connects to `VITE_API_SERVER`, default `http://localhost:3000`.
-- **`npm install`:** also links `@tetris/shared` into `node_modules`, so run it again after pulling changes to the workspaces.
+- **`npm ci`:** installs the exact versions from `package-lock.json` and links `@tetris/shared` into `node_modules`; run it again after pulling dependency changes. Use `npm install <package>` only to add or upgrade a dependency, and commit the updated lockfile.
 
 ## Tests and lint
 
@@ -74,7 +74,7 @@ npm test
 npm run lint
 ```
 
-`npm test` runs all three suites: the engine (`node --test`), the api (Vitest, including multi-client Socket.IO integration tests) and the web (Vitest). CI (`.github/workflows/ci.yml`) runs lint and tests on every push and pull request to `main` and `front-web`.
+`npm test` runs all three suites: the engine (`node --test`), the api (Vitest, including multi-client Socket.IO integration tests) and the web (Vitest). CI (`.github/workflows/ci.yml`) installs with `npm ci` and runs lint and tests on every push and pull request to `main` and `front-web`.
 
 ## Status
 
