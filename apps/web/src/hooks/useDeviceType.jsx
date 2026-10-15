@@ -17,8 +17,10 @@ const useDevice = () => {
   }, []);
 
   const isSmallScreen = useMediaQuery({ query: '(max-width: 640px)' });
+  // Touch screens (phones, tablets, iPads that report a desktop user agent) get on-screen controls.
+  const isTouch = useMediaQuery({ query: '(pointer: coarse)' });
 
-  return { deviceType, isSmallScreen };
+  return { deviceType, isSmallScreen, isTouch };
 };
 
 export default useDevice;

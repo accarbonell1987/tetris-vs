@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@nextui-org/react';
 import {
   ArrowNarrowDown,
@@ -8,136 +9,84 @@ import {
   KeyboardHide,
   KeyboardShow,
   PlayerPause,
+  Rotate,
   RotateClockwise
 } from 'tabler-icons-react';
-import { useState } from 'react';
 
 /**
- * Componente que muestra las flechas de dirección (Izquierda, Derecha, Abajo).
+ * One touch button. It reports press and release so the view can repeat moves while it is held
+ * (same DAS/ARR as the keyboard). Large, equal targets; no text selection or double-tap zoom.
  */
-const LeftArrows = ({ onAction }) => {
+const PadButton = ({ label, action, onPress, onRelease, className, children }) => (
+  <Button
+    isIconOnly
+    aria-label={label}
+    disableRipple
+    className={`h-14 w-full min-w-0 rounded-xl data-[pressed=true]:scale-95 ${className}`}
+    onPressStart={() => onPress(action)}
+    onPressEnd={() => onRelease(action)}>
+    {children}
+  </Button>
+);
+
+const ICON = { size: 26, strokeWidth: 2.25 };
+
+/**
+ * Touch controls laid out like a gamepad: moves under the left thumb, both rotations stacked under the right.
+ * `onPause` is only given in the local mode (there is no pause online).
+ */
+const Keys = ({ show, onPress, onRelease = () => {}, onPause }) => {
+  const [visible, setVisible] = useState(show || false);
+  const pad = { onPress, onRelease };
+
+  if (!visible) {
+    // Desktop: the controls stay out of the way until asked for.
+    return (
+      <div className="flex w-full justify-center">
+        <Button isIconOnly aria-label="Mostrar controles táctiles" variant="flat" onPress={() => setVisible(true)}>
+          <KeyboardShow size={22} strokeWidth={2} />
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex gap-2 flex-col">
-      <div className="flex gap-2">
-        {/* Botón Mover a la Izquierda */}
-        <Button color="warning" variant="solid" onClick={() => onAction('left')}>
-          <ArrowNarrowLeft size={48} strokeWidth={2} color={'black'} />
-        </Button>
-        {/* Botón Mover a la Derecha */}
-        <Button
-          color="warning"
-          variant="solid"
-          onClick={() => onAction('right')}>
-          <ArrowNarrowRight size={48} strokeWidth={2} color={'black'} />
-        </Button>
+    <div className="grid w-full grid-cols-[3fr_2fr] gap-4 select-none touch-none">
+      <div className="grid grid-cols-3 gap-2">
+        <PadButton label="Guardar pieza" action="hold" className="bg-secondary text-white" {...pad}>
+          <Archive {...ICON} />
+        </PadButton>
+        {/* Online there is no pause: the hard drop, the most used button, takes its place. */}
+        <PadButton label="Soltar" action="hardDrop" className={`bg-danger text-white ${onPause || !show ? '' : 'col-span-2'}`} {...pad}>
+          <ArrowBarToDown {...ICON} />
+        </PadButton>
+        {onPause ? (
+          <Button isIconOnly aria-label="Pausa" className="h-14 w-full min-w-0 rounded-xl" onPress={onPause}>
+            <PlayerPause size={22} strokeWidth={2} />
+          </Button>
+        ) : !show ? (
+          <Button isIconOnly aria-label="Ocultar controles táctiles" variant="flat" className="h-14 w-full min-w-0 rounded-xl" onPress={() => setVisible(false)}>
+            <KeyboardHide size={22} strokeWidth={2} />
+          </Button>
+        ) : null}
+        <PadButton label="Mover a la izquierda" action="left" className="bg-default-200 text-foreground" {...pad}>
+          <ArrowNarrowLeft {...ICON} />
+        </PadButton>
+        <PadButton label="Bajar" action="softDrop" className="bg-default-200 text-foreground" {...pad}>
+          <ArrowNarrowDown {...ICON} />
+        </PadButton>
+        <PadButton label="Mover a la derecha" action="right" className="bg-default-200 text-foreground" {...pad}>
+          <ArrowNarrowRight {...ICON} />
+        </PadButton>
       </div>
-      <div className="flex justify-center">
-        {/* Botón Mover Abajo (Soft Drop) */}
-        <Button
-          className="w-full"
-          color="warning"
-          variant="solid"
-          onClick={() => onAction('softDrop')}>
-          <ArrowNarrowDown size={48} strokeWidth={2} color={'black'} />
-        </Button>
+      <div className="grid grid-rows-2 gap-2">
+        <PadButton label="Girar a la derecha" action="rotateCW" className="bg-success text-black" {...pad}>
+          <RotateClockwise {...ICON} />
+        </PadButton>
+        <PadButton label="Girar a la izquierda" action="rotateCCW" className="bg-success text-black" {...pad}>
+          <Rotate {...ICON} />
+        </PadButton>
       </div>
-    </div>
-  );
-};
-
-/**
- * Componente que muestra los botones de acción (Rotar y Booster).
- */
-const RightButtons = ({ onAction }) => {
-  return (
-    <div>
-      <div>
-        {/* Botón Rotar Pieza */}
-        <Button
-          color="success"
-          variant="solid"
-          onClick={() => onAction('rotateCW')}>
-          <RotateClockwise size={48} strokeWidth={2} color={'black'} />
-        </Button>
-      </div>
-      <div>
-        {/* Botón de caída instantánea (hard drop) */}
-        <Button color="danger" variant="solid" onClick={() => onAction('hardDrop')}>
-          <ArrowBarToDown size={48} strokeWidth={2} color={'black'} />
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-/**
- * Botones centrales: Pausa y control de visibilidad de los controles.
- */
-const MiddleButtons = ({ isMobile, showKeys, setShowKeys, onPause, onAction }) => {
-  return (
-    <div className="flex flex-col gap-2">
-      {/* Botón de Pausa (solo modo local: online no hay pausa) */}
-      {onPause ? (
-        <Button isIconOnly aria-label="Pausa" variant="solid" size="sm" onClick={onPause}>
-          <PlayerPause size={18} strokeWidth={2} color={'white'} />
-        </Button>
-      ) : null}
-      {/* Botón para guardar la pieza (hold) */}
-      <Button isIconOnly aria-label="Guardar pieza" color="secondary" variant="solid" size="sm" onClick={() => onAction('hold')}>
-        <Archive size={18} strokeWidth={2} color={'white'} />
-      </Button>
-      {/* Botón para ocultar los controles visuales (solo desktop) */}
-      {!isMobile ? (
-        <Button
-          isIconOnly
-          color="success"
-          variant="solid"
-          size="sm"
-          onClick={() => {
-            setShowKeys(!showKeys);
-          }}>
-          <KeyboardHide size={22} strokeWidth={2} color={'white'} />
-        </Button>
-      ) : null}
-    </div>
-  );
-};
-
-/**
- * Componente principal Keys que maneja la interfaz de controles táctiles/visuales.
- */
-const Keys = ({ show, onAction, onPause }) => {
-  const isMobile = show;
-  const [showKeys, setShowKeys] = useState(show || false);
-
-  const keysComponents = (
-    <div className="flex justify-center gap-2">
-      <LeftArrows onAction={onAction} />
-      <MiddleButtons
-        isMobile={isMobile}
-        showKeys={showKeys}
-        setShowKeys={setShowKeys}
-        onPause={onPause}
-        onAction={onAction}
-      />
-      <RightButtons onAction={onAction} />
-    </div>
-  );
-
-  return showKeys ? (
-    keysComponents
-  ) : (
-    // Botón para volver a mostrar los controles cuando están ocultos
-    <div className="flex justify-center w-full">
-      <Button
-        isIconOnly
-        color="success"
-        variant="solid"
-        onClick={() => {
-          setShowKeys(!showKeys);
-        }}>
-        <KeyboardShow size={22} strokeWidth={2} color={'white'} />
-      </Button>
     </div>
   );
 };

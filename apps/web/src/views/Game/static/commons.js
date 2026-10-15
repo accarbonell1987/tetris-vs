@@ -42,3 +42,10 @@ export const ONLINE_CONTROLS_LEGEND = [
   'Espacio o Enter soltar · Shift guardar',
   'Mando: cruceta/stick mover · ↑ soltar · ✕/A y ○/B girar · L1/R1 guardar'
 ];
+
+// Phones: the game fills the screen (safe areas included) and the canvas shrinks to the space left
+// between the header and the controls. Desktop: the usual centered card.
+export const GAME_CARD =
+  'h-[100dvh] w-full max-w-full rounded-none pb-[env(safe-area-inset-bottom)] sm:h-auto sm:w-auto sm:rounded-large sm:pb-0';
+export const CANVAS_FRAME = 'relative flex min-h-0 w-full flex-1 items-center justify-center';
+export const CANVAS = 'block max-h-full max-w-full rounded-md';
