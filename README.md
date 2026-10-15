@@ -30,6 +30,8 @@ Modern Tetris rules from the shared engine:
 | Hold                     | Left Shift | Right Shift | Shift          |
 | Pause                    | Esc or P   | Esc or P    | —              |
 
+**Gamepads** (browser Gamepad API, standard mapping: PS4 DualShock and Xbox-style pads): D-pad or left stick to move and soft drop, D-pad ↑ hard drop, Cross/A rotate clockwise, Circle/B counter-clockwise, Square/Triangle/L1/R1 hold, Options/Start pause (local). In the local mode the first connected pad is P1 and the second P2; online, any pad drives your board. A pad must be recognized by the operating system first; most browsers only expose it after a button is pressed on the page.
+
 Left/right repeat with DAS 170 ms and ARR 50 ms. On touch devices the local mode shows on-screen buttons for P1.
 
 ## Project structure

@@ -5,6 +5,7 @@ import { CustomLayout } from '../../components';
 import { useDevice } from '../../hooks';
 import { Player, Pause, Keys } from './components';
 import { createInput, press, release, update } from './input';
+import { createGamepadPoller, pollGamepads } from './gamepad';
 import { drawGame, CANVAS_COLUMNS, CANVAS_ROWS } from './render';
 import { Music } from './func/music';
 import { BLOCK_SIZE, KEY_BINDINGS, PAUSE_KEYS, CONTROLS_LEGEND } from './static/commons';
@@ -179,9 +180,16 @@ const GameComponent = ({ player, enemy, totalScore }) => {
       inputs = [createInput(), createInput()];
     };
 
+    const gamepads = createGamepadPoller();
+
     const loop = time => {
       const delta = lastTime === null ? 0 : Math.min(time - lastTime, MAX_FRAME_MS);
       lastTime = time;
+      // Gamepads: the first pad plays P1, the second P2; Options / Start pauses.
+      pollGamepads(gamepads, navigator.getGamepads?.(), delta, playing()).forEach(({ slot, actions, pause }) => {
+        if (pause) controlsRef.current.togglePause();
+        if (slot < 2) actions.forEach(action => apply(act(game, slot, action)));
+      });
       if (playing()) {
         inputs.forEach((input, index) =>
           update(input, delta).forEach(action => apply(act(game, index, action)))

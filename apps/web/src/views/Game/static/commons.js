@@ -29,7 +29,8 @@ export const PAUSE_KEYS = ['Escape', 'KeyP'];
 export const CONTROLS_LEGEND = [
   'J1: A/D mover · S bajar · W/Q girar · Espacio soltar · Shift izq. guardar',
   'J2: ←/→ mover · ↓ bajar · ↑// girar · Enter soltar · Shift der. guardar',
-  'Esc o P: pausa'
+  'Esc o P: pausa',
+  'Mandos: el 1.º es J1 y el 2.º J2 · cruceta/stick mover · ↑ soltar · ✕/A y ○/B girar · L1/R1 guardar · Options pausa'
 ];
 
 // Pending garbage meter next to the online board (NextUI danger).
@@ -38,5 +39,6 @@ export const GARBAGE_COLOR = '#f31260';
 // Online: one player per keyboard, so both key sets drive the same board (A4). No pause.
 export const ONLINE_CONTROLS_LEGEND = [
   'A/D o ←/→ mover · S o ↓ bajar · W/↑ o Q// girar',
-  'Espacio o Enter soltar · Shift guardar'
+  'Espacio o Enter soltar · Shift guardar',
+  'Mando: cruceta/stick mover · ↑ soltar · ✕/A y ○/B girar · L1/R1 guardar'
 ];
