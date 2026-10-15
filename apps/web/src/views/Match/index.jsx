@@ -8,7 +8,7 @@ import Pause from '../Game/components/Pause';
 import { createInput, press, release, update } from '../Game/input';
 import { drawMatch, MATCH_CANVAS_COLUMNS, CANVAS_ROWS } from '../Game/render';
 import { BLOCK_SIZE, KEY_BINDINGS, ONLINE_CONTROLS_LEGEND } from '../Game/static/commons';
-import { buildSnapshot, createMatchState, matchReducer, ROUND_RESULT_MS } from './logic';
+import { buildSnapshot, createMatchState, isPlaying, matchReducer, rejoinMessage, ROUND_RESULT_MS } from './logic';
 
 // A long frame (e.g. after switching tabs) must not drop pieces several rows at once.
 const MAX_FRAME_MS = 100;
@@ -17,8 +17,39 @@ const BOARD_SEND_MS = 100;
 
 const emptyBoard = () => Array.from({ length: HIDDEN_ROWS + VISIBLE_ROWS }, () => Array(BOARD_WIDTH).fill(0));
 
-const overlayFor = (match, me, count) => {
-  const { phase, round, roundWinner, winner, reason } = match;
+const OVER_DETAIL = {
+  forfeit: won => (won ? 'Tu rival abandonó' : 'Abandonaste la partida'),
+  // Only the player who stayed gets this match-end.
+  disconnect: () => 'Tu rival no volvió a conectarse'
+};
+
+// Whole seconds left of `milliseconds` while `running`; dispatches `doneType` (if any) at zero.
+const useCountdown = (running, milliseconds, doneType, dispatch, restartKey) => {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!running) return;
+    let remaining = Math.ceil(milliseconds / 1000);
+    setCount(remaining);
+    const timer = setInterval(() => {
+      remaining -= 1;
+      if (remaining > 0) return setCount(remaining);
+      clearInterval(timer);
+      if (doneType) dispatch({ type: doneType });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [running, milliseconds, doneType, dispatch, restartKey]);
+  return count;
+};
+
+const overlayFor = (match, me, opponentName, count, pauseCount) => {
+  const { phase, pause, round, roundWinner, winner, reason } = match;
+  if (phase === 'over' && !winner) {
+    return { text: 'La partida terminó', detail: 'Terminó mientras estabas desconectado', final: true };
+  }
+  // The reducer clears `pause` when the match is over.
+  if (pause === 'reconnecting') return { text: 'Reconectando…' };
+  if (pause === 'opponent') return { text: `Esperando a ${opponentName}…`, detail: pauseCount };
+  if (pause === 'resuming') return { text: 'Reanudando', detail: pauseCount };
   if (phase === 'countdown') return { text: `Ronda ${round}`, detail: count };
   if (phase === 'lost') return { text: `Perdiste la ronda ${round}`, detail: 'Esperando al rival…' };
   if (phase === 'roundOver') {
@@ -26,8 +57,8 @@ const overlayFor = (match, me, count) => {
   }
   if (phase === 'over') {
     const won = winner === me;
-    const forfeit = reason === 'forfeit' ? (won ? 'Tu rival abandonó' : 'Abandonaste la partida') : null;
-    return { text: won ? '¡Ganaste la partida!' : 'Perdiste la partida', detail: forfeit, final: true };
+    const detail = OVER_DETAIL[reason]?.(won) ?? null;
+    return { text: won ? '¡Ganaste la partida!' : 'Perdiste la partida', detail, final: true };
   }
   return null;
 };
@@ -37,31 +68,50 @@ const overlayFor = (match, me, count) => {
  * referees rounds. The engine state lives inside one effect per round; React renders the HUD.
  */
 const OnlineMatch = ({ started }) => {
-  const { socket, player, clearMatch } = useGlobalStorage();
+  const { socket, player, players: lobbyPlayers, clearMatch } = useGlobalStorage();
   const navigate = useNavigate();
   const canvasRef = useRef(null);
-  const phaseRef = useRef(null);
   const [match, dispatch] = useReducer(matchReducer, started, createMatchState);
-  const [count, setCount] = useState(0);
-  const { matchId, round, seed, countdownMs, phase, players, wins } = match;
+  const stateRef = useRef(match);
+  // A match restored by match-active (reload, new tab) tells the server once that its board is gone (S3).
+  const rejoinPendingRef = useRef(Boolean(started.rejoin));
+  const { matchId, round, seed, countdownMs, phase, pause, graceMs, resumeMs, players, wins } = match;
   const me = player?.id ?? players[0].id;
   const [mine, opponent] = players[0].id === me ? players : [players[1], players[0]];
 
   useEffect(() => {
-    phaseRef.current = phase;
-  }, [phase]);
+    stateRef.current = match;
+  }, [match]);
 
-  // Referee messages (S4).
+  // Referee messages (S4) and reconnection (match-reconnect S1-S3).
   useEffect(() => {
     if (!socket) return;
     const handlers = {
       'round-end': payload => dispatch({ type: 'round-end', payload }),
       'round-start': payload => dispatch({ type: 'round-start', payload }),
-      'match-end': payload => dispatch({ type: 'match-end', payload })
+      'match-end': payload => dispatch({ type: 'match-end', payload }),
+      'opponent-disconnected': payload => dispatch({ type: 'opponent-disconnected', payload }),
+      'match-resume': payload => dispatch({ type: 'match-resume', payload }),
+      disconnect: () => dispatch({ type: 'disconnected' }),
+      // Back online after a drop: this board is still here.
+      'match-active': payload => {
+        if (payload.matchId === stateRef.current.matchId) socket.emit('match-rejoin', rejoinMessage(stateRef.current));
+      }
     };
     Object.entries(handlers).forEach(([event, handler]) => socket.on(event, handler));
+    // Listeners first: the answer to match-rejoin may come at once. The ref survives StrictMode's double effect.
+    if (rejoinPendingRef.current) {
+      rejoinPendingRef.current = false;
+      socket.emit('match-rejoin', rejoinMessage(stateRef.current));
+    }
     return () => Object.entries(handlers).forEach(([event, handler]) => socket.off(event, handler));
   }, [socket]);
+
+  // Back online without a match-active: the server already ended the match while this client was away.
+  const selfIdle = lobbyPlayers.some(entry => entry.id === me && entry.status === 'idle');
+  useEffect(() => {
+    if (selfIdle) dispatch({ type: 'match-gone' });
+  }, [selfIdle]);
 
   // The round result stays up for ROUND_RESULT_MS before the next countdown.
   useEffect(() => {
@@ -71,18 +121,16 @@ const OnlineMatch = ({ started }) => {
   }, [phase]);
 
   // 3-2-1 before every round.
-  useEffect(() => {
-    if (phase !== 'countdown') return;
-    let remaining = Math.ceil(countdownMs / 1000);
-    setCount(remaining);
-    const timer = setInterval(() => {
-      remaining -= 1;
-      if (remaining > 0) return setCount(remaining);
-      clearInterval(timer);
-      dispatch({ type: 'countdown-done' });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [phase, round, countdownMs]);
+  const count = useCountdown(phase === 'countdown', countdownMs, 'countdown-done', dispatch, round);
+  // Seconds left of the opponent's grace, or of the countdown before a paused round goes on.
+  const resuming = pause === 'resuming';
+  const pauseCount = useCountdown(
+    resuming || pause === 'opponent',
+    resuming ? resumeMs : graceMs,
+    resuming ? 'resume-done' : null,
+    dispatch,
+    pause
+  );
 
   // One fresh game per round, same seed on both clients.
   useEffect(() => {
@@ -99,7 +147,7 @@ const OnlineMatch = ({ started }) => {
     let sinceBoard = BOARD_SEND_MS;
     let frame = 0;
 
-    const playing = () => phaseRef.current === 'playing' && !game.over;
+    const playing = () => isPlaying(stateRef.current) && !game.over;
     const sendBoard = () => socket?.emit('match-board', { matchId, round, board: buildSnapshot(game) });
 
     const apply = result => {
@@ -186,11 +234,11 @@ const OnlineMatch = ({ started }) => {
 
   const leave = () => {
     if (phase !== 'over') socket?.emit('match-leave', { matchId });
-    navigate('/');
     clearMatch();
+    navigate('/');
   };
 
-  const overlay = overlayFor(match, me, count);
+  const overlay = overlayFor(match, me, opponent.name, count, pauseCount);
 
   return (
     <CustomLayout>

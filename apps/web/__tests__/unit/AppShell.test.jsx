@@ -1,4 +1,4 @@
-import { test, expect, beforeEach, afterEach } from 'vitest';
+import { test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act } from 'react-dom/test-utils';
 import { createRoot } from 'react-dom/client';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
@@ -90,4 +90,42 @@ test('lobby updates keep the player list fresh on every screen', () => {
   const players = [{ id: 'a', name: 'Ana', image: 'a.svg', status: 'idle' }];
   socket.receive('lobby-update', players);
   expect(useGlobalStore.getState().players).toEqual(players);
+});
+
+test('a cancelled invite closes the modal only for that challenger (S6)', async () => {
+  socket.receive('challenge-received', { from: { id: 'a', name: 'Ana', image: 'a.svg' } });
+  socket.receive('challenge-cancelled', { from: 'c' });
+  expect(document.body.textContent).toContain('¡Te desafían!');
+  socket.receive('challenge-cancelled', { from: 'a' });
+  // The modal leaves with an exit animation.
+  await vi.waitFor(() => expect(document.body.textContent).not.toContain('¡Te desafían!'));
+});
+
+test('match-active for an unknown match stores it as a rejoin and opens /match (S3)', () => {
+  socket.receive('match-active', { ...matchStart, round: 2 });
+  expect(useGlobalStore.getState().match).toEqual({ ...matchStart, round: 2, rejoin: true });
+  expect(router.state.location.pathname).toBe('/match');
+});
+
+test('match-active for the match on screen keeps it live: /match rejoins with its board (S2)', () => {
+  socket.receive('match-start', matchStart);
+  socket.receive('match-active', matchStart);
+  expect(useGlobalStore.getState().match).toEqual(matchStart);
+  expect(router.state.location.pathname).toBe('/match');
+});
+
+test('during a match every other route goes back to /match (S4)', async () => {
+  socket.receive('match-start', matchStart);
+  await act(async () => router.navigate('/game'));
+  expect(router.state.location.pathname).toBe('/match');
+});
+
+test('a finished match is dropped from the store once the player leaves /match (S4)', async () => {
+  socket.receive('match-start', matchStart);
+  socket.receive('match-end', { winner: 'b', wins: { a: 0, b: 2 }, reason: 'ko' });
+  expect(router.state.location.pathname).toBe('/match');
+  expect(useGlobalStore.getState().match).toMatchObject({ matchId: 'm1', over: true });
+  await act(async () => router.navigate('/game'));
+  expect(router.state.location.pathname).toBe('/game');
+  expect(useGlobalStore.getState().match).toBeNull();
 });

@@ -1,6 +1,14 @@
 import { describe, test, expect } from 'vitest';
 import { createGame, getCells, PIECE_TYPES, HIDDEN_ROWS, VISIBLE_ROWS } from '@tetris/shared';
-import { buildSnapshot, createMatchState, matchReducer, isCurrentRound, ROUND_RESULT_MS } from '../../src/views/Match/logic.js';
+import {
+  buildSnapshot,
+  createMatchState,
+  matchReducer,
+  isCurrentRound,
+  isPlaying,
+  rejoinMessage,
+  ROUND_RESULT_MS
+} from '../../src/views/Match/logic.js';
 
 const start = {
   matchId: 'm1',
@@ -104,5 +112,66 @@ describe('match state (S4)', () => {
     expect(matchReducer(state, { type: 'round-start', payload: { round: 2, seed: 1, wins: {}, countdownMs: 3000 } })).toBe(
       state
     );
+  });
+});
+
+describe('reconnection (match-reconnect S1-S3)', () => {
+  const playing = () => matchReducer(createMatchState(start), { type: 'countdown-done' });
+
+  test('a drop of this client pauses the game until the server resumes it after a countdown', () => {
+    let state = matchReducer(playing(), { type: 'disconnected' });
+    expect(state).toMatchObject({ phase: 'playing', pause: 'reconnecting' });
+    expect(isPlaying(state)).toBe(false);
+    state = matchReducer(state, { type: 'match-resume', payload: { round: 1, wins: { a: 0, b: 0 }, countdownMs: 3000 } });
+    expect(state).toMatchObject({ phase: 'playing', pause: 'resuming', resumeMs: 3000 });
+    expect(isPlaying(state)).toBe(false);
+    state = matchReducer(state, { type: 'resume-done' });
+    expect(state).toMatchObject({ phase: 'playing', pause: null });
+    expect(isPlaying(state)).toBe(true);
+  });
+
+  test('a dropped opponent pauses the game with the grace period', () => {
+    const state = matchReducer(playing(), { type: 'opponent-disconnected', payload: { graceMs: 15000 } });
+    expect(state).toMatchObject({ phase: 'playing', pause: 'opponent', graceMs: 15000 });
+    expect(isPlaying(state)).toBe(false);
+    expect(matchReducer(state, { type: 'resume-done' })).toBe(state);
+  });
+
+  test('a round lost on rejoin, a new round or the match end clear the pause', () => {
+    const paused = matchReducer(playing(), { type: 'opponent-disconnected', payload: { graceMs: 15000 } });
+    const ended = matchReducer(paused, { type: 'round-end', payload: { round: 1, winner: 'a', wins: { a: 1, b: 0 } } });
+    expect(ended).toMatchObject({ phase: 'roundOver', pause: null });
+    const over = matchReducer(paused, { type: 'match-end', payload: { winner: 'a', wins: { a: 0, b: 0 }, reason: 'disconnect' } });
+    expect(over).toMatchObject({ phase: 'over', pause: null, reason: 'disconnect' });
+  });
+
+  test('a match restored after a reload starts with the round lost: the board is gone (S3)', () => {
+    const state = createMatchState({ ...start, round: 2, rejoin: true });
+    expect(state).toMatchObject({ round: 2, phase: 'lost', pause: null });
+    expect(rejoinMessage(state)).toEqual({ matchId: 'm1', round: 2, hasGame: false });
+  });
+
+  test('rejoining with a live board keeps the game; a topped-out board does not', () => {
+    expect(rejoinMessage(playing())).toEqual({ matchId: 'm1', round: 1, hasGame: true });
+    expect(rejoinMessage(matchReducer(playing(), { type: 'topout' }))).toMatchObject({ hasGame: false });
+  });
+
+  test('rejoining while the next round is queued names that round', () => {
+    const roundOver = matchReducer(playing(), {
+      type: 'round-end',
+      payload: { round: 1, winner: 'a', wins: { a: 1, b: 0 } }
+    });
+    const queued = matchReducer(roundOver, {
+      type: 'round-start',
+      payload: { round: 2, seed: 5, wins: { a: 1, b: 0 }, countdownMs: 3000 }
+    });
+    expect(rejoinMessage(queued)).toEqual({ matchId: 'm1', round: 2, hasGame: true });
+  });
+
+  test('back online without the match: it ended while this client was away', () => {
+    const reconnecting = matchReducer(playing(), { type: 'disconnected' });
+    expect(matchReducer(reconnecting, { type: 'match-gone' })).toMatchObject({ phase: 'over', pause: null, winner: null });
+    const live = playing();
+    expect(matchReducer(live, { type: 'match-gone' })).toBe(live);
   });
 });
