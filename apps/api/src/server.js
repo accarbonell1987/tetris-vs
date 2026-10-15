@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
+import path from 'path';
 
 import { version } from '../package.json';
 import { Console } from './utils/handleConsole';
@@ -259,7 +260,13 @@ io.on('connection', socket => {
   });
 });
 
+// Production (Docker): the API also serves the built web app from ./dist, on the same origin.
 app.use(express.static('dist'));
+// Client routes (/match, /login...) load index.html on reload; files with an extension stay real 404s.
+// Without a build (dev, tests) this falls through to a 404 too.
+app.get(/^[^.]*$/, (request, response, next) =>
+  response.sendFile(path.resolve('dist/index.html'), error => error && next())
+);
 
 if (process.env.NODE_ENV !== 'test') {
   httpServer.listen(PORT, SERVER, () => {
