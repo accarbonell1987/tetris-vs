@@ -44,6 +44,13 @@ export const createMatchState = ({ matchId, players, round, seed, wins, countdow
 
 export const isPlaying = state => state.phase === 'playing' && !state.pause;
 
+/**
+ * A match-active for the match on screen means "back online": rejoin only after this client dropped.
+ * After a reload the mount already rejoined once; answering a duplicate match-active (one per lobby-join)
+ * would report a lost board again and cost a second round.
+ */
+export const shouldRejoin = (state, payload) => payload.matchId === state.matchId && state.pause === 'reconnecting';
+
 /** `match-rejoin` payload: a topped-out board is no game to resume (its top-out may never have arrived). */
 export const rejoinMessage = state => ({
   matchId: state.matchId,

@@ -8,7 +8,7 @@ import Pause from '../Game/components/Pause';
 import { createInput, press, release, update } from '../Game/input';
 import { drawMatch, MATCH_CANVAS_COLUMNS, CANVAS_ROWS } from '../Game/render';
 import { BLOCK_SIZE, KEY_BINDINGS, ONLINE_CONTROLS_LEGEND } from '../Game/static/commons';
-import { buildSnapshot, createMatchState, isPlaying, matchReducer, rejoinMessage, ROUND_RESULT_MS } from './logic';
+import { buildSnapshot, createMatchState, isPlaying, matchReducer, rejoinMessage, ROUND_RESULT_MS, shouldRejoin } from './logic';
 
 // A long frame (e.g. after switching tabs) must not drop pieces several rows at once.
 const MAX_FRAME_MS = 100;
@@ -95,7 +95,7 @@ const OnlineMatch = ({ started }) => {
       disconnect: () => dispatch({ type: 'disconnected' }),
       // Back online after a drop: this board is still here.
       'match-active': payload => {
-        if (payload.matchId === stateRef.current.matchId) socket.emit('match-rejoin', rejoinMessage(stateRef.current));
+        if (shouldRejoin(stateRef.current, payload)) socket.emit('match-rejoin', rejoinMessage(stateRef.current));
       }
     };
     Object.entries(handlers).forEach(([event, handler]) => socket.on(event, handler));

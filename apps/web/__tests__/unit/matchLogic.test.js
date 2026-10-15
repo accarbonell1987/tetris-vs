@@ -1,14 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { createGame, getCells, PIECE_TYPES, HIDDEN_ROWS, VISIBLE_ROWS } from '@tetris/shared';
-import {
-  buildSnapshot,
-  createMatchState,
-  matchReducer,
-  isCurrentRound,
-  isPlaying,
-  rejoinMessage,
-  ROUND_RESULT_MS
-} from '../../src/views/Match/logic.js';
+import { buildSnapshot, createMatchState, matchReducer, isCurrentRound, isPlaying, rejoinMessage, ROUND_RESULT_MS, shouldRejoin } from '../../src/views/Match/logic.js';
 
 const start = {
   matchId: 'm1',
@@ -175,3 +167,21 @@ describe('reconnection (match-reconnect S1-S3)', () => {
     expect(matchReducer(live, { type: 'match-gone' })).toBe(live);
   });
 });
+
+describe('shouldRejoin (match-active while /match is mounted)', () => {
+  const state = { matchId: 'm1', pause: null };
+
+  test('answers only after this client dropped its connection', () => {
+    expect(shouldRejoin({ ...state, pause: 'reconnecting' }, { matchId: 'm1' })).toBe(true);
+  });
+
+  test('ignores a duplicate match-active after a reload already rejoined (it would cost another round)', () => {
+    expect(shouldRejoin(state, { matchId: 'm1' })).toBe(false);
+    expect(shouldRejoin({ ...state, pause: 'opponent' }, { matchId: 'm1' })).toBe(false);
+  });
+
+  test('ignores another match', () => {
+    expect(shouldRejoin({ ...state, pause: 'reconnecting' }, { matchId: 'm2' })).toBe(false);
+  });
+});
+
