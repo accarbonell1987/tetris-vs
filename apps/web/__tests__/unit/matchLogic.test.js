@@ -185,3 +185,27 @@ describe('shouldRejoin (match-active while /match is mounted)', () => {
   });
 });
 
+describe('a drop during the round result (verifier B1)', () => {
+  const resultScreen = () => {
+    let state = matchReducer(createMatchState(start), { type: 'countdown-done' });
+    state = matchReducer(state, { type: 'round-end', payload: { round: 1, winner: 'a', wins: { a: 1, b: 0 } } });
+    return matchReducer(state, { type: 'round-start', payload: { round: 2, seed: 7, wins: { a: 1, b: 0 }, countdownMs: 3000 } });
+  };
+
+  test('this client dropping keeps the pause into the next round, so it still rejoins', () => {
+    let state = matchReducer(resultScreen(), { type: 'disconnected' });
+    state = matchReducer(state, { type: 'result-shown' });
+    expect(state).toMatchObject({ round: 2, phase: 'countdown', pause: 'reconnecting' });
+    state = matchReducer(state, { type: 'countdown-done' });
+    expect(isPlaying(state)).toBe(false);
+    expect(shouldRejoin(state, { matchId: 'm1' })).toBe(true);
+  });
+
+  test('the opponent dropping keeps this game paused into the next round', () => {
+    let state = matchReducer(resultScreen(), { type: 'opponent-disconnected', payload: { graceMs: 15000 } });
+    state = matchReducer(state, { type: 'result-shown' });
+    expect(state).toMatchObject({ round: 2, pause: 'opponent' });
+    expect(isPlaying(matchReducer(state, { type: 'countdown-done' }))).toBe(false);
+  });
+});
+

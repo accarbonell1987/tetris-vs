@@ -45,8 +45,10 @@ const AppShell = () => {
       'match-active': active => {
         setChallenger(null);
         setNotice(null);
-        const onScreen = useGlobalStorage.getState().match?.matchId === active.matchId;
-        setMatch(onScreen ? active : { ...active, rejoin: true });
+        const current = useGlobalStorage.getState().match;
+        const onScreen = current?.matchId === active.matchId;
+        // A second match-active (lobby-join is sent twice on load) must not drop a rejoin still pending.
+        setMatch(onScreen ? { ...active, ...(current.rejoin && { rejoin: true }) } : { ...active, rejoin: true });
         navigate('/match');
       },
       'match-end': finishMatch

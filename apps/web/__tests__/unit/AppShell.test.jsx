@@ -107,6 +107,12 @@ test('match-active for an unknown match stores it as a rejoin and opens /match (
   expect(router.state.location.pathname).toBe('/match');
 });
 
+test('two match-active in a row before /match mounts keep the rejoin flag (verifier B2)', () => {
+  socket.receive('match-active', { ...matchStart, round: 2 });
+  socket.receive('match-active', { ...matchStart, round: 2 });
+  expect(useGlobalStore.getState().match).toEqual({ ...matchStart, round: 2, rejoin: true });
+});
+
 test('match-active for the match on screen keeps it live: /match rejoins with its board (S2)', () => {
   socket.receive('match-start', matchStart);
   socket.receive('match-active', matchStart);

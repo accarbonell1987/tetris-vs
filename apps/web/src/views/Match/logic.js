@@ -65,7 +65,7 @@ const startRound = (state, { round, seed, wins, countdownMs }) => ({
   wins,
   countdownMs,
   phase: 'countdown',
-  pause: null,
+  // A pause is about connections, not rounds: a drop during the round result must survive the next round.
   roundWinner: null,
   nextRound: null,
   resultShown: false
