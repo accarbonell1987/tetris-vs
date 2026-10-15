@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { io as ioClient } from 'socket.io-client';
-import { app, httpServer, io } from '../../src/server.js';
+import { httpServer } from '../../src/server.js';
 import { Lobby } from '../../src/services/lobbyServices.js';
 
 describe('Lobby join/leave flow', () => {
@@ -13,7 +13,6 @@ describe('Lobby join/leave flow', () => {
       httpServer.listen(0, 'localhost', resolve);
     });
     serverPort = httpServer.address().port;
-    console.log(`Test server listening on port ${serverPort}`);
   });
 
   afterAll(() => {

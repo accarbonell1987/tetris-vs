@@ -9,8 +9,6 @@ const PrivateRoute = ({ children }) => {
 
   const user = storageValue?.user;
 
-  if (player?.rememberMe) return <Navigate to="/" />;
-
   return player?.loggedIn || user?.loggedIn ? children : <Navigate to="/login" />;
 };
 

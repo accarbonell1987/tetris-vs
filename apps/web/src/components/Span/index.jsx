@@ -1,5 +1,3 @@
-import React from 'react'
-
 import style from './span.module.css'
 
 const CustomSpan = ({ text, actionComponent }) => {

@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+    branches: [main, front-web]
+  pull_request:
+    branches: [main, front-web]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # package-lock.json is gitignored, so there is nothing to `npm ci` against yet.
+      - run: npm install --no-audit --no-fund
+      - run: npm run lint
+      - run: npm test

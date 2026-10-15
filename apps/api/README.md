@@ -1,21 +1,21 @@
-[![Deployment Pipeline](https://github.com/union-digital-cuba/api.event.checker/actions/workflows/pipeline.yml/badge.svg)](https://github.com/union-digital-cuba/api.event.checker/actions/workflows/pipeline.yml)
+# api
 
-# API Chat 💻
+Express + Socket.IO server for tetris-vs: lobby, challenges, match referee and garbage/board relays. The protocol is in [`docs/event-flow.md`](../../docs/event-flow.md).
 
-## Description 📚
+- `src/server.js`: Express app and every Socket.IO handler.
+- `src/services/lobbyServices.js`: connected players and their `idle` / `playing` status.
+- `src/services/matchServices.js`: matches, rounds and best-of-3 wins, forfeits, pending challenges. These are plain functions, unit-tested without sockets.
 
-API para chat con Socket.io
+```bash
+npm run dev
+```
 
-## Installation 💡
+```bash
+npm test -- --run
+```
 
-- npm install
-- npm run dev
+```bash
+npm run lint
+```
 
-## App features 🪐
-
-- API
-- WebSocket
-
-## Backend Development 🌚
-
-![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+The dev server listens on `http://localhost:3000` (`PORT` and `SERVER` env vars). Integration tests start the server on a random port and talk to it with real `socket.io-client` clients.

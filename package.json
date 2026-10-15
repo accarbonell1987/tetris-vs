@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "stop": "kill-port --port 5000,5001",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "web": "cd ./apps/web && npm run dev",
-    "server": "cd ./apps/api && npm run dev"
+    "server": "cd ./apps/api && npm run dev",
+    "stop": "kill-port --port 5173,3000",
+    "lint": "npm run lint -w web && npm run lint -w api",
+    "test": "npm test -w @tetris/shared && npm test -w api -- --run && npm test -w web -- --run"
   },
   "workspaces": [
     "./packages/*",
