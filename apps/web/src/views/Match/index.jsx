@@ -9,8 +9,8 @@ import Keys from '../Game/components/Keys';
 import Pause from '../Game/components/Pause';
 import { createInput, press, release, update } from '../Game/input';
 import { createGamepadPoller, pollGamepads } from '../Game/gamepad';
-import { drawMatch, MATCH_CANVAS_COLUMNS, CANVAS_ROWS } from '../Game/render';
-import { BLOCK_SIZE, KEY_BINDINGS, ONLINE_CONTROLS_LEGEND } from '../Game/static/commons';
+import { drawMatch, matchColumns, CANVAS_ROWS } from '../Game/render';
+import { BLOCK_SIZE, KEY_BINDINGS, ONLINE_CONTROLS_LEGEND, GAME_CARD, CANVAS_FRAME, CANVAS } from '../Game/static/commons';
 import { buildSnapshot, createMatchState, isPlaying, matchReducer, rejoinMessage, ROUND_RESULT_MS, shouldRejoin } from './logic';
 
 // A long frame (e.g. after switching tabs) must not drop pieces several rows at once.
@@ -74,9 +74,12 @@ const OnlineMatch = ({ started }) => {
   const { socket, player, players: lobbyPlayers, clearMatch } = useGlobalStorage();
   const navigate = useNavigate();
   const canvasRef = useRef(null);
-  const { deviceType } = useDevice();
+  const { isSmallScreen, isTouch } = useDevice();
   // Touch buttons call into the game loop of the current round.
-  const touchActionRef = useRef(() => {});
+  const touchRef = useRef({ press: () => {}, release: () => {} });
+  // Read by the render loop every frame: switching layouts must not restart the round.
+  const layoutRef = useRef('wide');
+  layoutRef.current = isSmallScreen ? 'compact' : 'wide';
   const [match, dispatch] = useReducer(matchReducer, started, createMatchState);
   const stateRef = useRef(match);
   // A match restored by match-active (reload, new tab) tells the server once that its board is gone (S3).
@@ -141,20 +144,24 @@ const OnlineMatch = ({ started }) => {
   // One fresh game per round, same seed on both clients.
   useEffect(() => {
     const canvas = canvasRef.current;
-    canvas.width = MATCH_CANVAS_COLUMNS * BLOCK_SIZE;
-    canvas.height = CANVAS_ROWS * BLOCK_SIZE;
     const context = canvas.getContext('2d');
-    context.scale(BLOCK_SIZE, BLOCK_SIZE);
+    let sizedFor = null;
 
     let game = createGame({ seed });
     let opponentBoard = emptyBoard();
     let inputs = [createInput(), createInput()];
+    const touchInput = createInput();
     let lastTime = null;
     let sinceBoard = BOARD_SEND_MS;
     let frame = 0;
 
     const playing = () => isPlaying(stateRef.current) && !game.over;
-    touchActionRef.current = action => playing() && apply(act(game, 0, action));
+    touchRef.current = {
+      press: action => {
+        if (playing()) press(touchInput, action).forEach(next => apply(act(game, 0, next)));
+      },
+      release: action => release(touchInput, action)
+    };
     const sendBoard = () => socket?.emit('match-board', { matchId, round, board: buildSnapshot(game) });
 
     const apply = result => {
@@ -216,7 +223,7 @@ const OnlineMatch = ({ started }) => {
         actions.forEach(action => apply(act(game, 0, action)))
       );
       if (playing()) {
-        inputs.forEach(input => update(input, delta).forEach(action => apply(act(game, 0, action))));
+        [...inputs, touchInput].forEach(input => update(input, delta).forEach(action => apply(act(game, 0, action))));
         apply(tick(game, delta));
         sinceBoard += delta;
         if (sinceBoard >= BOARD_SEND_MS && !game.over) {
@@ -224,7 +231,14 @@ const OnlineMatch = ({ started }) => {
           sendBoard();
         }
       }
-      drawMatch(context, game, opponentBoard);
+      if (sizedFor !== layoutRef.current) {
+        sizedFor = layoutRef.current;
+        // Resizing a canvas also resets its transform.
+        canvas.width = matchColumns(sizedFor) * BLOCK_SIZE;
+        canvas.height = CANVAS_ROWS * BLOCK_SIZE;
+        context.scale(BLOCK_SIZE, BLOCK_SIZE);
+      }
+      drawMatch(context, game, opponentBoard, sizedFor);
       frame = requestAnimationFrame(loop);
     };
 
@@ -255,10 +269,17 @@ const OnlineMatch = ({ started }) => {
 
   return (
     <CustomLayout>
-      <Card className="max-w-full">
-        <CardHeader className="flex justify-between gap-4">
+      <Card className={GAME_CARD}>
+        <CardHeader className="flex items-center justify-between gap-2 sm:gap-4">
           <User name={mine.name} description={`Rondas: ${wins[mine.id] ?? 0}`} avatarProps={{ src: mine.image }} />
-          <span className="text-small text-default-500">Mejor de 3</span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-small text-default-500">Mejor de 3</span>
+            {phase !== 'over' ? (
+              <Button color="danger" variant="flat" size="sm" onPress={leave}>
+                Abandonar
+              </Button>
+            ) : null}
+          </div>
           <User
             name={opponent.name}
             description={`Rondas: ${wins[opponent.id] ?? 0}`}
@@ -266,9 +287,9 @@ const OnlineMatch = ({ started }) => {
           />
         </CardHeader>
         <Divider />
-        <CardBody className="items-center gap-3">
-          <div className="relative max-w-full">
-            <canvas ref={canvasRef} className="block max-w-full h-auto rounded-md" />
+        <CardBody className="min-h-0 flex-1 items-center gap-3 py-2 sm:py-3">
+          <div className={CANVAS_FRAME}>
+            <canvas ref={canvasRef} className={CANVAS} />
             {overlay && (
               <Pause text={overlay.text}>
                 {overlay.detail ? <p className="text-2xl font-bold text-white">{overlay.detail}</p> : null}
@@ -280,21 +301,23 @@ const OnlineMatch = ({ started }) => {
               </Pause>
             )}
           </div>
-          <ul className="text-tiny text-default-500 text-center">
-            {ONLINE_CONTROLS_LEGEND.map(line => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-          {phase !== 'over' ? (
-            <Button color="danger" variant="flat" size="sm" onPress={leave}>
-              Abandonar
-            </Button>
-          ) : null}
+          {/* Keyboard and gamepad help; touch screens use the buttons below instead. */}
+          {isTouch ? null : (
+            <ul className="text-tiny text-default-500 text-center">
+              {ONLINE_CONTROLS_LEGEND.map(line => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          )}
         </CardBody>
         <Divider />
         <CardFooter>
           {/* Touch controls (shown by default on touch devices); no pause online. */}
-          <Keys show={deviceType !== 'unknown'} onAction={action => touchActionRef.current(action)} />
+          <Keys
+            show={isTouch}
+            onPress={action => touchRef.current.press(action)}
+            onRelease={action => touchRef.current.release(action)}
+          />
         </CardFooter>
       </Card>
     </CustomLayout>

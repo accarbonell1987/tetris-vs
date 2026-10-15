@@ -6,9 +6,9 @@ import { useDevice } from '../../hooks';
 import { Player, Pause, Keys } from './components';
 import { createInput, press, release, update } from './input';
 import { createGamepadPoller, pollGamepads } from './gamepad';
-import { drawGame, CANVAS_COLUMNS, CANVAS_ROWS } from './render';
+import { drawGame, gameColumns, CANVAS_ROWS } from './render';
 import { Music } from './func/music';
-import { BLOCK_SIZE, KEY_BINDINGS, PAUSE_KEYS, CONTROLS_LEGEND } from './static/commons';
+import { BLOCK_SIZE, KEY_BINDINGS, PAUSE_KEYS, CONTROLS_LEGEND, GAME_CARD, CANVAS_FRAME, CANVAS } from './static/commons';
 
 // A long frame (e.g. after switching tabs) must not drop pieces several rows at once.
 const MAX_FRAME_MS = 100;
@@ -24,8 +24,9 @@ const GameComponentPresentational = ({
   enemy,
   hud,
   totalScore,
-  device,
-  onAction,
+  isTouch,
+  onPress,
+  onRelease,
   onPause,
   onRematch
 }) => {
@@ -33,7 +34,7 @@ const GameComponentPresentational = ({
 
   return (
     <CustomLayout>
-      <Card className="max-w-full">
+      <Card className={GAME_CARD}>
         <CardHeader className="flex gap-3 justify-center">
           <div className="flex h-7 space-x-4 text-small w-full">
             <div className="flex justify-start w-1/2">
@@ -57,9 +58,9 @@ const GameComponentPresentational = ({
         </CardHeader>
         <Divider />
 
-        <CardBody className="items-center gap-3">
-          <div className="relative max-w-full">
-            <canvas ref={canvasRef} className="block max-w-full h-auto rounded-md" />
+        <CardBody className="min-h-0 flex-1 items-center gap-3 py-2 sm:py-3">
+          <div className={CANVAS_FRAME}>
+            <canvas ref={canvasRef} className={CANVAS} />
             {winnerName !== null ? (
               <Pause text={`¡Ganó ${winnerName}!`}>
                 <Button color="warning" onPress={onRematch}>
@@ -76,17 +77,20 @@ const GameComponentPresentational = ({
               )
             )}
           </div>
-          <ul className="text-tiny text-default-500 text-center">
-            {CONTROLS_LEGEND.map(line => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
+          {/* Keyboard and gamepad help; touch screens use the buttons below instead. */}
+          {isTouch ? null : (
+            <ul className="text-tiny text-default-500 text-center">
+              {CONTROLS_LEGEND.map(line => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          )}
         </CardBody>
         <Divider />
 
         <CardFooter>
           {/* Touch controls for player 1 (shown by default on touch devices) */}
-          <Keys show={device !== 'unknown'} onAction={onAction} onPause={onPause} />
+          <Keys show={isTouch} onPress={onPress} onRelease={onRelease} onPause={onPause} />
         </CardFooter>
       </Card>
     </CustomLayout>
@@ -98,21 +102,23 @@ const GameComponentPresentational = ({
  * The engine state lives inside the effect; React only renders the HUD.
  */
 const GameComponent = ({ player, enemy, totalScore }) => {
-  const { deviceType } = useDevice();
+  const { isSmallScreen, isTouch } = useDevice();
   const canvasRef = useRef(null);
-  const controlsRef = useRef({ action: () => {}, togglePause: () => {} });
+  const controlsRef = useRef({ press: () => {}, release: () => {}, togglePause: () => {} });
+  // Read by the render loop every frame: switching layouts must not restart the match.
+  const layoutRef = useRef('wide');
+  layoutRef.current = isSmallScreen ? 'compact' : 'wide';
   const [hud, setHud] = useState(initialHud);
   const [round, setRound] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    canvas.width = CANVAS_COLUMNS * BLOCK_SIZE;
-    canvas.height = CANVAS_ROWS * BLOCK_SIZE;
     const context = canvas.getContext('2d');
-    context.scale(BLOCK_SIZE, BLOCK_SIZE);
+    let sizedFor = null;
 
     let game = createGame({ players: 2, targetScore: totalScore });
     let inputs = [createInput(), createInput()];
+    const touchInput = createInput(); // on-screen buttons drive player 1
     let paused = true;
     let lastTime = null;
     let frame = 0;
@@ -133,7 +139,10 @@ const GameComponent = ({ player, enemy, totalScore }) => {
     const playing = () => !paused && !game.over;
 
     controlsRef.current = {
-      action: action => playing() && apply(act(game, 0, action)),
+      press: action => {
+        if (playing()) press(touchInput, action).forEach(next => apply(act(game, 0, next)));
+      },
+      release: action => release(touchInput, action),
       togglePause: () => {
         if (game.over) return;
         paused = !paused;
@@ -194,9 +203,17 @@ const GameComponent = ({ player, enemy, totalScore }) => {
         inputs.forEach((input, index) =>
           update(input, delta).forEach(action => apply(act(game, index, action)))
         );
+        update(touchInput, delta).forEach(action => apply(act(game, 0, action)));
         apply(tick(game, delta));
       }
-      drawGame(context, game);
+      if (sizedFor !== layoutRef.current) {
+        sizedFor = layoutRef.current;
+        // Resizing a canvas also resets its transform.
+        canvas.width = gameColumns(sizedFor) * BLOCK_SIZE;
+        canvas.height = CANVAS_ROWS * BLOCK_SIZE;
+        context.scale(BLOCK_SIZE, BLOCK_SIZE);
+      }
+      drawGame(context, game, sizedFor);
       frame = requestAnimationFrame(loop);
     };
 
@@ -223,8 +240,9 @@ const GameComponent = ({ player, enemy, totalScore }) => {
       enemy={enemy}
       hud={hud}
       totalScore={totalScore}
-      device={deviceType}
-      onAction={action => controlsRef.current.action(action)}
+      isTouch={isTouch}
+      onPress={action => controlsRef.current.press(action)}
+      onRelease={action => controlsRef.current.release(action)}
       onPause={() => controlsRef.current.togglePause()}
       onRematch={() => setRound(value => value + 1)}
     />

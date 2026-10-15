@@ -12,7 +12,9 @@
 
   gap: 1rem;
 
-  height: 100svh;
+  /* At least the viewport, but grows (and scrolls) when the content is taller: a fixed height
+     centered content that overflowed above the top, out of reach. */
+  min-height: 100dvh;
 }
 
 .dark {
