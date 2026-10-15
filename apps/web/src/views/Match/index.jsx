@@ -8,6 +8,7 @@ import { useDevice } from '../../hooks';
 import Keys from '../Game/components/Keys';
 import Pause from '../Game/components/Pause';
 import { createInput, press, release, update } from '../Game/input';
+import { createGamepadPoller, pollGamepads } from '../Game/gamepad';
 import { drawMatch, MATCH_CANVAS_COLUMNS, CANVAS_ROWS } from '../Game/render';
 import { BLOCK_SIZE, KEY_BINDINGS, ONLINE_CONTROLS_LEGEND } from '../Game/static/commons';
 import { buildSnapshot, createMatchState, isPlaying, matchReducer, rejoinMessage, ROUND_RESULT_MS, shouldRejoin } from './logic';
@@ -205,9 +206,15 @@ const OnlineMatch = ({ started }) => {
       inputs = [createInput(), createInput()];
     };
 
+    const gamepads = createGamepadPoller();
+
     const loop = time => {
       const delta = lastTime === null ? 0 : Math.min(time - lastTime, MAX_FRAME_MS);
       lastTime = time;
+      // Gamepads: any pad drives this board (no pause online).
+      pollGamepads(gamepads, navigator.getGamepads?.(), delta, playing()).forEach(({ actions }) =>
+        actions.forEach(action => apply(act(game, 0, action)))
+      );
       if (playing()) {
         inputs.forEach(input => update(input, delta).forEach(action => apply(act(game, 0, action))));
         apply(tick(game, delta));
