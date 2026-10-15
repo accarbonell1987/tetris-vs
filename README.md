@@ -64,6 +64,19 @@ npm run web
 - **Web:** runs on `http://localhost:5173`. It connects to `VITE_API_SERVER`, default `http://localhost:3000`.
 - **`npm ci`:** installs the exact versions from `package-lock.json` and links `@tetris/shared` into `node_modules`; run it again after pulling dependency changes. Use `npm install <package>` only to add or upgrade a dependency, and commit the updated lockfile.
 
+## Docker
+
+One container runs everything: the API serves the built web app on the same origin, so there is no CORS to configure.
+
+```bash
+docker compose up --build
+```
+
+- Open `http://localhost:3000`. For a two-player test on one machine, use `http://localhost:3000` and `http://127.0.0.1:3000`; they are different origins, so each keeps its own session.
+- Stop the dev servers first: the container uses port 3000.
+- Environment: `PORT` (default 3000) and `RECONNECT_GRACE_MS` (default 15000, also set in `docker-compose.yml`).
+- `/health` and `/version` answer JSON; any other path without a file extension loads the app, so reloading `/match` works.
+
 ## Tests and lint
 
 ```bash

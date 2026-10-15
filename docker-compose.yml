@@ -1,0 +1,9 @@
+services:
+  tetris:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      # Milliseconds a dropped player has to come back before losing the match.
+      RECONNECT_GRACE_MS: 15000
+    restart: unless-stopped
